@@ -22,10 +22,9 @@ export default function LoginPage() {
     });
 
     if (res?.ok) {
-      // Hard redirect — ensures session cookie is picked up before rendering
       window.location.href = "/dashboard";
     } else {
-      setError("Invalid email or password");
+      setError(`Sign in failed: ${res?.error || "Invalid email or password"}`);
       setLoading(false);
     }
   }

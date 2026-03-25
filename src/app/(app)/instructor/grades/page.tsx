@@ -1,34 +1,44 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/useAuth";
-import { db } from "@/lib/mockStore";
-import { useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { ClipboardList } from "lucide-react";
+
+type Course = { _id: string; title: string };
+type Result = {
+  _id: string;
+  userId: { name: string; email: string };
+  assessmentId: { title: string; passingScore: number };
+  score: number;
+  passed: boolean;
+  gradedAt?: string;
+  createdAt: string;
+};
 
 export default function GradesPage() {
   const { user } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   const courseId = searchParams.get("courseId") || "";
-  if (!user || !["admin", "instructor"].includes(user.role)) return null;
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [results, setResults] = useState<Result[]>([]);
 
-  const courses = useMemo(() => {
-    const all = db.courses.getAll();
-    return user.role === "admin"
-      ? all
-      : all.filter((c) => c.createdBy === user.id);
-  }, [user]);
+  useEffect(() => {
+    fetch("/api/courses")
+      .then((r) => r.json())
+      .then(setCourses);
+  }, []);
 
-  const results = useMemo(() => {
-    if (!courseId) return [];
-    return db.results.forCourse(courseId).map((r) => ({
-      ...r,
-      user: db.users.findById(r.userId),
-      assessment: db.assessments.findById(r.assessmentId),
-    }));
+  useEffect(() => {
+    if (!courseId) return;
+    fetch(`/api/grades?courseId=${courseId}`)
+      .then((r) => r.json())
+      .then(setResults);
   }, [courseId]);
+
+  if (!user || !["admin", "instructor"].includes(user.role)) return null;
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -51,7 +61,7 @@ export default function GradesPage() {
         >
           <option value="">Select a course...</option>
           {courses.map((c) => (
-            <option key={c.id} value={c.id}>
+            <option key={c._id} value={c._id}>
               {c.title}
             </option>
           ))}
@@ -82,29 +92,35 @@ export default function GradesPage() {
             </thead>
             <tbody className="divide-y divide-zinc-100">
               {results.map((r) => (
-                <tr key={r.id} className="hover:bg-zinc-50 transition-colors">
+                <tr key={r._id} className="hover:bg-zinc-50 transition-colors">
                   <td className="px-4 py-3">
-                    <p className="font-medium text-zinc-900">{r.user?.name}</p>
-                    <p className="text-xs text-zinc-400">{r.user?.email}</p>
+                    <p className="font-medium text-zinc-900">
+                      {r.userId?.name}
+                    </p>
+                    <p className="text-xs text-zinc-400">{r.userId?.email}</p>
                   </td>
                   <td className="px-4 py-3 text-zinc-600">
-                    {r.assessment?.title}
+                    {r.assessmentId?.title}
                   </td>
                   <td className="px-4 py-3">
                     <span className="font-semibold text-zinc-900">
                       {r.score}%
                     </span>
                     <span className="text-xs text-zinc-400 ml-1">
-                      / {r.assessment?.passingScore}% pass
+                      / {r.assessmentId?.passingScore}% pass
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <Badge variant={r.passed ? "success" : "danger"}>
-                      {r.passed ? "Passed" : "Failed"}
-                    </Badge>
+                    {r.gradedAt ? (
+                      <Badge variant={r.passed ? "success" : "danger"}>
+                        {r.passed ? "Passed" : "Failed"}
+                      </Badge>
+                    ) : (
+                      <Badge variant="warning">Pending review</Badge>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-xs text-zinc-400">
-                    {new Date(r.gradedAt).toLocaleDateString()}
+                    {new Date(r.createdAt).toLocaleDateString()}
                   </td>
                 </tr>
               ))}

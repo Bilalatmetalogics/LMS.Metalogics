@@ -1,42 +1,35 @@
 "use client";
 
-import { useState } from "react";
-import { db } from "@/lib/mockStore";
-import { useAuth } from "@/lib/useAuth";
-import { useNotifications } from "@/lib/useNotifications";
+import { useState } from "react";);
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = u"");
 
 export default function AnnouncementForm({ courseId }: { courseId?: string }) {
-  const { user } = useAuth();
-  const { refresh } = useNotifications();
   const [form, setForm] = useState({ title: "", body: "" });
   const [sent, setSent] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!user) return;
+    setLoading(true);
+    setError("");
 
-    // Notify all relevant users
-    const allUsers = db.users.getAll().filter((u) => u.isActive);
-    const targets = courseId
-      ? allUsers.filter((u) => u.assignedCourses.includes(courseId))
-      : allUsers;
-
-    targets.forEach((u) => {
-      db.notifications.add({
-        id: crypto.randomUUID(),
-        userId: u.id,
-        type: "announcement",
-        message: `📢 ${form.title}: ${form.body}`,
-        link: courseId ? `/courses/${courseId}` : "/dashboard",
-        read: false,
-        createdAt: new Date().toISOString(),
-      });
+    const res = await fetch("/api/announcements", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...form, courseId }),
     });
 
-    setForm({ title: "", body: "" });
-    setSent(true);
-    if (user) refresh(user.id);
-    setTimeout(() => setSent(false), 3000);
+    if (res.ok) {
+      setForm({ title: "", body: "" });
+      setSent(true);
+      setTimeout(() => setSent(false), 3000);
+    } else {
+      setError("Failed to send announcement");
+    }
+    setLoading(false);
   }
 
   return (
@@ -49,11 +42,13 @@ export default function AnnouncementForm({ courseId }: { courseId?: string }) {
           Announcement sent.
         </p>
       )}
+      {error && (
+        <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+          {error}
+        </p>
+      )}
       <div className="space-y-1">
-        <label
-          htmlFor="ann-title"
-          className="text-sm font-medium text-zinc-700"
-        >
+        <label htmlFor="ann-title" className="text-sm font-medium text-zinc-700">
           Title
         </label>
         <input
@@ -83,9 +78,10 @@ export default function AnnouncementForm({ courseId }: { courseId?: string }) {
       <div className="flex justify-end">
         <button
           type="submit"
-          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors"
+          disabled={loading}
+          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white text-sm font-medium rounded-lg transition-colors"
         >
-          Send announcement
+          {loading ? "Sending..." : "Send announcement"}
         </button>
       </div>
     </form>

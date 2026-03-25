@@ -1,8 +1,13 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
+import { config } from "dotenv";
+import { resolve } from "path";
 
-const MONGODB_URI =
-  process.env.MONGODB_URI || "mongodb://localhost:27017/lms-internal";
+// Load .env.local so the seed uses the same DB as the app
+config({ path: resolve(process.cwd(), ".env.local") });
+
+const MONGODB_URI = process.env.MONGODB_URI;
+if (!MONGODB_URI) throw new Error("MONGODB_URI is not defined in .env.local");
 
 const UserSchema = new mongoose.Schema(
   {

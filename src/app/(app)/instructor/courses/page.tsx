@@ -1,20 +1,34 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/useAuth";
-import { db } from "@/lib/mockStore";
-import { useMemo } from "react";
 import Link from "next/link";
+
+type Course = {
+  _id: string;
+  title: string;
+  category: string;
+  modules: any[];
+  status: string;
+};
 
 export default function InstructorCoursesPage() {
   const { user } = useAuth();
-  if (!user || !["admin", "instructor"].includes(user.role)) return null;
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const courses = useMemo(() => {
-    const all = db.courses.getAll();
-    return user.role === "admin"
-      ? all
-      : all.filter((c) => c.createdBy === user.id);
-  }, [user]);
+  useEffect(() => {
+    fetch("/api/courses")
+      .then((r) => r.json())
+      .then((data) => {
+        setCourses(data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  if (!user || !["admin", "instructor"].includes(user.role)) return null;
+  if (loading) return null;
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -63,7 +77,7 @@ export default function InstructorCoursesPage() {
             </thead>
             <tbody className="divide-y divide-zinc-100">
               {courses.map((c) => (
-                <tr key={c.id} className="hover:bg-zinc-50 transition-colors">
+                <tr key={c._id} className="hover:bg-zinc-50 transition-colors">
                   <td className="px-4 py-3 font-medium text-zinc-900">
                     {c.title}
                   </td>
@@ -80,7 +94,7 @@ export default function InstructorCoursesPage() {
                   </td>
                   <td className="px-4 py-3">
                     <Link
-                      href={`/instructor/courses/${c.id}`}
+                      href={`/instructor/courses/${c._id}`}
                       className="text-xs text-indigo-600 hover:underline"
                     >
                       Edit

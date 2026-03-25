@@ -2,11 +2,16 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { db, MockCourse } from "@/lib/mockStore";
-import { useAuth } from "@/lib/useAuth";
 
-export default function CourseForm({ course }: { course?: MockCourse }) {
-  const { user } = useAuth();
+type Course = {
+  _id: string;
+  title: string;
+  description: string;
+  category: string;
+  status: "draft" | "published";
+};
+
+export default function CourseForm({ course }: { course?: Course }) {
   const router = useRouter();
   const [form, setForm] = useState({
     title: course?.title || "",
@@ -15,29 +20,33 @@ export default function CourseForm({ course }: { course?: MockCourse }) {
     status: course?.status || "draft",
   });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    if (course) {
-      db.courses.upsert({
-        ...course,
-        ...form,
-        status: form.status as "draft" | "published",
-      });
-      router.push(`/instructor/courses/${course.id}`);
+    setError("");
+
+    const res = course
+      ? await fetch(`/api/courses/${course._id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        })
+      : await fetch("/api/courses", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        });
+
+    if (res.ok) {
+      const data = await res.json();
+      router.push(`/instructor/courses/${data._id}`);
+      router.refresh();
     } else {
-      const newCourse: MockCourse = {
-        id: crypto.randomUUID(),
-        ...form,
-        status: form.status as "draft" | "published",
-        createdBy: user!.id,
-        modules: [],
-      };
-      db.courses.upsert(newCourse);
-      router.push(`/instructor/courses/${newCourse.id}`);
+      setError("Failed to save course");
+      setLoading(false);
     }
-    setLoading(false);
   }
 
   return (
@@ -45,6 +54,11 @@ export default function CourseForm({ course }: { course?: MockCourse }) {
       onSubmit={handleSubmit}
       className="bg-white border border-zinc-200 rounded-xl p-6 space-y-4"
     >
+      {error && (
+        <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+          {error}
+        </p>
+      )}
       <div className="space-y-1">
         <label
           htmlFor="course-title"
@@ -111,7 +125,9 @@ export default function CourseForm({ course }: { course?: MockCourse }) {
           <select
             id="course-status"
             value={form.status}
-            onChange={(e) => setForm((p) => ({ ...p, status: e.target.value }))}
+            onChange={(e) =>
+              setForm((p) => ({ ...p, status: e.target.value as any }))
+            }
             className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
           >
             <option value="draft">Draft</option>

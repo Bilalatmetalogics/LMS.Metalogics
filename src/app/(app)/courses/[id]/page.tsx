@@ -1,8 +1,6 @@
 "use client";
 
-import { useAuth } from "@/lib/useAuth";
-import { db } from "@/lib/mockStore";
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
@@ -15,33 +13,58 @@ import {
   ChevronRight,
 } from "lucide-react";
 
+type Video = { _id: string; title: string; duration: number };
+type Module = { _id: string; title: string; videos: Video[] };
+type Course = {
+  _id: string;
+  title: string;
+  description: string;
+  category: string;
+  modules: Module[];
+};
+type Progress = {
+  videoId: string;
+  watchedSeconds: number;
+  totalSeconds: number;
+  completed: boolean;
+};
+type Assessment = { _id: string; title: string; moduleId: string };
+
 export default function CourseDetailPage() {
-  const { user } = useAuth();
   const params = useParams<{ id: string }>();
-  if (!user) return null;
+  const [course, setCourse] = useState<Course | null>(null);
+  const [progressList, setProgressList] = useState<Progress[]>([]);
+  const [assessments, setAssessments] = useState<Assessment[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const course = useMemo(() => db.courses.findById(params.id), [params.id]);
-  const progressList = useMemo(
-    () => db.progress.forCourse(user.id, params.id),
-    [user.id, params.id],
-  );
-  const assessments = useMemo(
-    () => db.assessments.getAll().filter((a) => a.courseId === params.id),
-    [params.id],
-  );
+  useEffect(() => {
+    Promise.all([
+      fetch(`/api/courses/${params.id}`).then((r) => r.json()),
+      fetch(`/api/progress?courseId=${params.id}`).then((r) => r.json()),
+      fetch(`/api/assessments?courseId=${params.id}`).then((r) => r.json()),
+    ])
+      .then(([c, p, a]) => {
+        setCourse(c);
+        setProgressList(p);
+        setAssessments(a);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [params.id]);
 
+  if (loading) return null;
   if (!course)
     return <div className="text-sm text-zinc-400 p-6">Course not found.</div>;
 
   const allVideos = course.modules.flatMap((m) => m.videos);
-  const progressMap: Record<string, any> = {};
+  const progressMap: Record<string, Progress> = {};
   progressList.forEach((p) => {
     progressMap[p.videoId] = p;
   });
   const completed = progressList.filter((p) => p.completed).length;
   const total = allVideos.length;
   const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
-  const assessmentByModule: Record<string, any> = {};
+  const assessmentByModule: Record<string, Assessment> = {};
   assessments.forEach((a) => {
     assessmentByModule[a.moduleId] = a;
   });
@@ -84,12 +107,12 @@ export default function CourseDetailPage() {
       <div className="space-y-3">
         {course.modules.map((mod) => {
           const modCompleted = mod.videos.filter(
-            (v) => progressMap[v.id]?.completed,
+            (v) => progressMap[v._id]?.completed,
           ).length;
-          const assessment = assessmentByModule[mod.id];
+          const assessment = assessmentByModule[mod._id];
           return (
             <div
-              key={mod.id}
+              key={mod._id}
               className="bg-white border border-zinc-200 rounded-xl overflow-hidden"
             >
               <div className="px-4 py-3 border-b border-zinc-100 flex items-center justify-between">
@@ -103,10 +126,10 @@ export default function CourseDetailPage() {
               <ul className="divide-y divide-zinc-100">
                 {mod.videos.map((v) => (
                   <li
-                    key={v.id}
+                    key={v._id}
                     className="px-4 py-2.5 flex items-center gap-3"
                   >
-                    {progressMap[v.id]?.completed ? (
+                    {progressMap[v._id]?.completed ? (
                       <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
                     ) : (
                       <PlayCircle className="w-4 h-4 text-zinc-300 shrink-0" />
@@ -128,7 +151,7 @@ export default function CourseDetailPage() {
                       </span>
                     </div>
                     <Link
-                      href={`/courses/${params.id}/assessment/${assessment.id}`}
+                      href={`/courses/${params.id}/assessment/${assessment._id}`}
                       className="text-xs text-indigo-600 hover:underline"
                     >
                       Take assessment →

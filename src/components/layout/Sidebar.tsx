@@ -106,7 +106,9 @@ export default function Sidebar({ role }: { role: string }) {
       <div className="w-7 h-7 rounded-md bg-indigo-600 flex items-center justify-center">
         <GraduationCap className="w-4 h-4 text-white" />
       </div>
-      <span className="text-sm font-semibold text-zinc-900">TrainHub</span>
+      <span className="text-sm font-semibold text-zinc-900">
+        MetaLogics-Trainings
+      </span>
     </div>
   );
 

@@ -1,11 +1,10 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import NextAuth from "next-auth";
+import { authConfig } from "@/lib/auth.config";
 
-// Simple passthrough — auth redirects handled in app layout and login page
-export default function proxy(_req: NextRequest) {
-  return NextResponse.next();
-}
+const { auth } = NextAuth(authConfig);
+
+export default auth;
 
 export const config = {
-  matcher: [],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.png$).*)"],
 };

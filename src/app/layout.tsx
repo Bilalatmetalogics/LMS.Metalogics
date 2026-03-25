@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { SessionProvider } from "next-auth/react";
+import { auth } from "@/lib/auth";
+import Providers from "@/components/layout/Providers";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -10,18 +11,20 @@ export const metadata: Metadata = {
   description: "Operational Training System",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await auth();
+
   return (
     <html lang="en" className={inter.variable}>
       <body
         className="min-h-screen bg-white text-zinc-900 antialiased"
         suppressHydrationWarning
       >
-        <SessionProvider>{children}</SessionProvider>
+        <Providers session={session}>{children}</Providers>
       </body>
     </html>
   );

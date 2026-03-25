@@ -1,72 +1,73 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { db, MockCourse, MockVideo } from "@/lib/mockStore";
+import { useState } from "react";
 import { ChevronRight, PlayCircle, Trash2, Upload } from "lucide-react";
 
-export default function ModuleBuilder({ course }: { course: MockCourse }) {
-  const [modules, setModules] = useState(course.modules);
+type Video = {
+  _id: string;
+  title: string;
+  url: string;
+  duration: number;
+  order: number;
+};
+type Module = { _id: string; title: string; order: number; videos: Video[] };
+type Course = { _id: string; modules: Module[] };
+
+export default function ModuleBuilder({ course }: { course: Course }) {
+  const [modules, setModules] = useState<Module[]>(course.modules);
   const [newModTitle, setNewModTitle] = useState("");
   const [expandedMod, setExpandedMod] = useState<string | null>(null);
 
-  function refresh() {
-    const updated = db.courses.findById(course.id);
-    if (updated) setModules(updated.modules);
-  }
-
-  function addModule() {
+  async function addModule() {
     if (!newModTitle.trim()) return;
-    const updated = db.courses.findById(course.id)!;
-    updated.modules.push({
-      id: crypto.randomUUID(),
-      title: newModTitle,
-      order: updated.modules.length + 1,
-      videos: [],
+    const res = await fetch(`/api/courses/${course._id}/modules`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: newModTitle }),
     });
-    db.courses.upsert(updated);
-    setNewModTitle("");
-    refresh();
+    if (res.ok) {
+      const updated = await res.json();
+      setModules(updated.modules);
+      setNewModTitle("");
+    }
   }
 
-  function addVideo(moduleId: string, video: Omit<MockVideo, "id" | "order">) {
-    const updated = db.courses.findById(course.id)!;
-    const mod = updated.modules.find((m) => m.id === moduleId);
-    if (!mod) return;
-    mod.videos.push({
-      id: crypto.randomUUID(),
-      order: mod.videos.length + 1,
-      ...video,
-    });
-    db.courses.upsert(updated);
-    refresh();
+  async function deleteVideo(moduleId: string, videoId: string) {
+    const res = await fetch(
+      `/api/courses/${course._id}/modules/${moduleId}/videos`,
+      {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ videoId }),
+      },
+    );
+    if (res.ok) {
+      const updated = await res.json();
+      setModules(updated.modules);
+    }
   }
 
-  function deleteVideo(moduleId: string, videoId: string) {
-    const updated = db.courses.findById(course.id)!;
-    const mod = updated.modules.find((m) => m.id === moduleId);
-    if (!mod) return;
-    mod.videos = mod.videos.filter((v) => v.id !== videoId);
-    db.courses.upsert(updated);
-    refresh();
+  function onVideoAdded(updatedCourse: any) {
+    setModules(updatedCourse.modules);
   }
 
   return (
     <div className="space-y-3">
       {modules.map((mod) => (
         <div
-          key={mod.id}
+          key={mod._id}
           className="bg-white border border-zinc-200 rounded-xl overflow-hidden"
         >
           <button
             type="button"
             onClick={() =>
-              setExpandedMod(expandedMod === mod.id ? null : mod.id)
+              setExpandedMod(expandedMod === mod._id ? null : mod._id)
             }
             className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-zinc-50 transition-colors"
           >
             <div className="flex items-center gap-2">
               <ChevronRight
-                className={`w-4 h-4 text-zinc-400 transition-transform ${expandedMod === mod.id ? "rotate-90" : ""}`}
+                className={`w-4 h-4 text-zinc-400 transition-transform ${expandedMod === mod._id ? "rotate-90" : ""}`}
               />
               <span className="text-sm font-medium text-zinc-900">
                 {mod.title}
@@ -77,13 +78,13 @@ export default function ModuleBuilder({ course }: { course: MockCourse }) {
             </span>
           </button>
 
-          {expandedMod === mod.id && (
+          {expandedMod === mod._id && (
             <div className="border-t border-zinc-100 px-4 py-3 space-y-3">
               {mod.videos.length > 0 && (
                 <ul className="space-y-2">
                   {mod.videos.map((v) => (
                     <li
-                      key={v.id}
+                      key={v._id}
                       className="flex items-center justify-between py-2 px-3 bg-zinc-50 rounded-lg"
                     >
                       <div className="flex items-center gap-2">
@@ -97,7 +98,7 @@ export default function ModuleBuilder({ course }: { course: MockCourse }) {
                       </div>
                       <button
                         type="button"
-                        onClick={() => deleteVideo(mod.id, v.id)}
+                        onClick={() => deleteVideo(mod._id, v._id)}
                         className="text-zinc-400 hover:text-red-500 transition-colors"
                         aria-label="Remove video"
                       >
@@ -108,8 +109,9 @@ export default function ModuleBuilder({ course }: { course: MockCourse }) {
                 </ul>
               )}
               <AddVideoForm
-                moduleId={mod.id}
-                onAdd={(v) => addVideo(mod.id, v)}
+                courseId={course._id}
+                moduleId={mod._id}
+                onAdded={onVideoAdded}
               />
             </div>
           )}
@@ -140,11 +142,13 @@ export default function ModuleBuilder({ course }: { course: MockCourse }) {
 }
 
 function AddVideoForm({
+  courseId,
   moduleId,
-  onAdd,
+  onAdded,
 }: {
+  courseId: string;
   moduleId: string;
-  onAdd: (v: Omit<MockVideo, "id" | "order">) => void;
+  onAdded: (course: any) => void;
 }) {
   const [tab, setTab] = useState<"url" | "file">("url");
   const [title, setTitle] = useState("");
@@ -152,14 +156,14 @@ function AddVideoForm({
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
-  const fileRef = useRef<HTMLInputElement>(null);
+  const [error, setError] = useState("");
 
   function reset() {
     setTitle("");
     setUrl("");
     setFile(null);
     setProgress(0);
-    if (fileRef.current) fileRef.current.value = "";
+    setError("");
   }
 
   async function getDuration(src: string): Promise<number> {
@@ -172,40 +176,78 @@ function AddVideoForm({
     });
   }
 
+  async function saveVideo(videoUrl: string, duration: number) {
+    const res = await fetch(
+      `/api/courses/${courseId}/modules/${moduleId}/videos`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, url: videoUrl, duration }),
+      },
+    );
+    if (res.ok) {
+      onAdded(await res.json());
+      reset();
+    } else {
+      setError("Failed to save video");
+    }
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!title.trim()) return;
+    setUploading(true);
+    setError("");
 
     if (tab === "url") {
-      if (!url.trim()) return;
+      if (!url.trim()) {
+        setUploading(false);
+        return;
+      }
       const duration = await getDuration(url);
-      onAdd({ title, url, duration });
-      reset();
-      return;
+      await saveVideo(url, duration);
+    } else {
+      if (!file) {
+        setUploading(false);
+        return;
+      }
+      try {
+        // Get signed upload params from Cloudinary
+        const sigRes = await fetch("/api/upload?folder=lms/videos");
+        if (!sigRes.ok) throw new Error("Could not get upload signature");
+        const { signature, timestamp, cloudName, apiKey, folder } =
+          await sigRes.json();
+
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("signature", signature);
+        formData.append("timestamp", timestamp);
+        formData.append("api_key", apiKey);
+        formData.append("folder", folder);
+
+        const xhr = new XMLHttpRequest();
+        xhr.upload.onprogress = (ev) => {
+          if (ev.lengthComputable)
+            setProgress(Math.round((ev.loaded / ev.total) * 100));
+        };
+
+        const result: any = await new Promise((resolve, reject) => {
+          xhr.onload = () => resolve(JSON.parse(xhr.responseText));
+          xhr.onerror = reject;
+          xhr.open(
+            "POST",
+            `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`,
+          );
+          xhr.send(formData);
+        });
+
+        if (result.error) throw new Error(result.error.message);
+        await saveVideo(result.secure_url, Math.round(result.duration || 0));
+      } catch (err: any) {
+        setError(err.message || "Upload failed");
+      }
     }
-
-    // file tab — create a blob URL
-    if (!file) return;
-    setUploading(true);
-
-    // Simulate progress for UX
-    let p = 0;
-    const interval = setInterval(() => {
-      p = Math.min(p + 20, 90);
-      setProgress(p);
-    }, 80);
-
-    const blobUrl = URL.createObjectURL(file);
-    const duration = await getDuration(blobUrl);
-
-    clearInterval(interval);
-    setProgress(100);
-
-    setTimeout(() => {
-      onAdd({ title, url: blobUrl, duration });
-      reset();
-      setUploading(false);
-    }, 300);
+    setUploading(false);
   }
 
   const canSubmit =
@@ -237,7 +279,7 @@ function AddVideoForm({
           </button>
         </div>
       </div>
-
+      {error && <p className="text-xs text-red-600">{error}</p>}
       <div className="space-y-1">
         <label htmlFor={`vt-${moduleId}`} className="text-xs text-zinc-500">
           Title
@@ -251,7 +293,6 @@ function AddVideoForm({
           className="w-full px-3 py-1.5 text-sm border border-zinc-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
         />
       </div>
-
       {tab === "url" ? (
         <div className="space-y-1">
           <label htmlFor={`vu-${moduleId}`} className="text-xs text-zinc-500">
@@ -271,48 +312,26 @@ function AddVideoForm({
           <label htmlFor={`vf-${moduleId}`} className="text-xs text-zinc-500">
             Video file
           </label>
-          <div
-            className="relative border border-zinc-200 rounded-lg overflow-hidden cursor-pointer hover:border-indigo-300 transition-colors"
-            onClick={() => fileRef.current?.click()}
-          >
-            <input
-              id={`vf-${moduleId}`}
-              ref={fileRef}
-              type="file"
-              accept="video/*"
-              className="sr-only"
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
-            />
-            <div className="flex items-center gap-3 px-3 py-2.5">
-              <Upload className="w-4 h-4 text-zinc-400 shrink-0" />
-              <span className="text-sm text-zinc-500 truncate">
-                {file ? file.name : "Click to choose a video file"}
-              </span>
-              {file && (
-                <span className="text-xs text-zinc-400 ml-auto shrink-0">
-                  {(file.size / 1024 / 1024).toFixed(1)} MB
-                </span>
-              )}
-            </div>
-          </div>
-          <p className="text-xs text-zinc-400">
-            Stored as a local blob URL — works for demo/testing only.
-          </p>
+          <input
+            id={`vf-${moduleId}`}
+            type="file"
+            accept="video/*"
+            onChange={(e) => setFile(e.target.files?.[0] || null)}
+            className="w-full text-sm text-zinc-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-medium file:bg-zinc-100 file:text-zinc-700 hover:file:bg-zinc-200"
+          />
         </div>
       )}
-
       {uploading && (
         <div className="space-y-1">
           <div className="h-1.5 bg-zinc-100 rounded-full overflow-hidden">
             <div
-              className="h-full bg-indigo-500 rounded-full transition-all duration-150"
+              className="h-full bg-indigo-500 rounded-full transition-all"
               style={{ width: `${progress}%` }}
             />
           </div>
           <p className="text-xs text-zinc-400">{progress}%</p>
         </div>
       )}
-
       <button
         type="submit"
         disabled={!canSubmit}

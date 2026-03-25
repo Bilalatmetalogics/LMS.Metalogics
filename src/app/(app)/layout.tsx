@@ -1,21 +1,20 @@
 "use client";
 
 import { useAuth } from "@/lib/useAuth";
-import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import Sidebar from "@/components/layout/Sidebar";
 import TopBar from "@/components/layout/TopBar";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, status } = useAuth();
-  const router = useRouter();
 
   useEffect(() => {
     if (status === "unauthenticated") {
-      router.replace("/login");
+      window.location.href = "/login";
     }
-  }, [status, router]);
+  }, [status]);
 
+  // Show spinner while session is resolving
   if (status === "loading") {
     return (
       <div className="flex h-screen items-center justify-center bg-zinc-50">
@@ -24,7 +23,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!user) return null;
+  // Unauthenticated — useEffect will redirect, render nothing meanwhile
+  if (status === "unauthenticated" || !user) return null;
 
   return (
     <div className="flex h-screen overflow-hidden bg-zinc-50">

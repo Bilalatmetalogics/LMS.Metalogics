@@ -1,7 +1,6 @@
 "use client";
 
-import { useAuth } from "@/lib/useAuth";
-import { db } from "@/lib/mockStore";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import AssessmentTaker from "@/components/learn/AssessmentTaker";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
@@ -9,19 +8,47 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, XCircle } from "lucide-react";
 import Link from "next/link";
 
+type Assessment = {
+  _id: string;
+  title: string;
+  passingScore: number;
+  questions: any[];
+};
+
+type Result = { score: number; passed: boolean };
+
 export default function TakeAssessmentPage() {
-  const { user } = useAuth();
   const params = useParams<{ id: string; assessmentId: string }>();
-  if (!user) return null;
+  const [assessment, setAssessment] = useState<Assessment | null>(null);
+  const [courseTitle, setCourseTitle] = useState("");
+  const [result, setResult] = useState<Result | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const assessment = db.assessments.findById(params.assessmentId);
-  const course = db.courses.findById(params.id);
-  const existing = db.results.findByUser(user.id, params.assessmentId);
-
-  if (!assessment)
-    return (
-      <div className="text-sm text-zinc-400 p-6">Assessment not found.</div>
+  async function load() {
+    const [aRes, cRes, gRes] = await Promise.all([
+      fetch(`/api/assessments/${params.assessmentId}`),
+      fetch(`/api/courses/${params.id}`),
+      fetch(`/api/grades?courseId=${params.id}`),
+    ]);
+    const a = await aRes.json();
+    const c = await cRes.json();
+    const grades = await gRes.json();
+    setAssessment(a);
+    setCourseTitle(c.title || "");
+    const existing = grades.find(
+      (r: any) =>
+        r.assessmentId?._id === params.assessmentId ||
+        r.assessmentId === params.assessmentId,
     );
+    if (existing) setResult({ score: existing.score, passed: existing.passed });
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    load();
+  }, [params.assessmentId]);
+
+  if (loading || !assessment) return null;
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -29,7 +56,7 @@ export default function TakeAssessmentPage() {
         <Breadcrumbs
           items={[
             { label: "Courses", href: "/courses" },
-            { label: course?.title ?? "Course", href: `/courses/${params.id}` },
+            { label: courseTitle, href: `/courses/${params.id}` },
             { label: assessment.title },
           ]}
         />
@@ -41,26 +68,24 @@ export default function TakeAssessmentPage() {
         </p>
       </div>
 
-      {existing ? (
+      {result ? (
         <div className="bg-white border border-zinc-200 rounded-xl p-8 text-center space-y-4">
-          {existing.passed ? (
+          {result.passed ? (
             <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto" />
           ) : (
             <XCircle className="w-12 h-12 text-red-400 mx-auto" />
           )}
           <div>
-            <p className="text-4xl font-bold text-zinc-900">
-              {existing.score}%
-            </p>
+            <p className="text-4xl font-bold text-zinc-900">{result.score}%</p>
             <Badge
-              variant={existing.passed ? "success" : "danger"}
+              variant={result.passed ? "success" : "danger"}
               className="mt-2"
             >
-              {existing.passed ? "Passed" : "Not passed"}
+              {result.passed ? "Passed" : "Not passed"}
             </Badge>
           </div>
           <p className="text-sm text-zinc-500">
-            {existing.passed
+            {result.passed
               ? "Great work — you cleared the passing threshold."
               : `You needed ${assessment.passingScore}% to pass. Keep reviewing and try again.`}
           </p>

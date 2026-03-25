@@ -1,8 +1,6 @@
 "use client";
 
 import { useRef, useEffect, useCallback } from "react";
-import { db } from "@/lib/mockStore";
-import { useAuth } from "@/lib/useAuth";
 
 type Video = { _id: string; title: string; url: string; duration: number };
 
@@ -17,46 +15,28 @@ export default function VideoPlayer({
   initialProgress: number;
   onProgressSaved?: () => void;
 }) {
-  const { user } = useAuth();
   const videoRef = useRef<HTMLVideoElement>(null);
   const lastSaved = useRef(0);
 
   const saveProgress = useCallback(
-    (currentTime: number, duration: number) => {
-      if (!user || !duration) return;
-      const ratio = currentTime / duration;
-      const completed = ratio >= 0.75;
-      const existing = db.progress.get(user.id, video._id);
-      const newWatched = existing
-        ? Math.max(existing.watchedSeconds, Math.floor(currentTime))
-        : Math.floor(currentTime);
-
-      db.progress.upsert({
-        userId: user.id,
-        videoId: video._id,
-        courseId,
-        watchedSeconds: newWatched,
-        totalSeconds: Math.floor(duration),
-        completed: existing?.completed || completed,
-      });
-
-      // Notify unlock
-      if (completed && !existing?.completed) {
-        db.notifications.add({
-          id: crypto.randomUUID(),
-          userId: user.id,
-          type: "unlock",
-          message: `You unlocked the next video in this course.`,
-          link: `/courses/${courseId}/learn`,
-          read: false,
-          createdAt: new Date().toISOString(),
+    async (currentTime: number, duration: number) => {
+      if (!duration) return;
+      try {
+        await fetch("/api/progress", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            videoId: video._id,
+            courseId,
+            watchedSeconds: Math.floor(currentTime),
+            totalSeconds: Math.floor(duration),
+          }),
         });
-      }
-
-      lastSaved.current = currentTime;
-      onProgressSaved?.();
+        lastSaved.current = currentTime;
+        onProgressSaved?.();
+      } catch {}
     },
-    [user, video._id, courseId, onProgressSaved],
+    [video._id, courseId, onProgressSaved],
   );
 
   useEffect(() => {

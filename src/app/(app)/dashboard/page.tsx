@@ -1,8 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/useAuth";
-import { db } from "@/lib/mockStore";
-import { useMemo } from "react";
 import Link from "next/link";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { Badge } from "@/components/ui/badge";
@@ -32,70 +31,78 @@ function StatCard({
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  if (!user) return null;
+  const [data, setData] = useState<any>(null);
+  const [announcements, setAnnouncements] = useState<any[]>([]);
 
-  const data = useMemo(() => {
-    const allCourses = db.courses.getAll();
-    const allUsers = db.users.getAll();
-    const allResults = db.results.getAll();
+  useEffect(() => {
+    if (!user) return;
 
-    if (user.role === "admin") {
-      const activeUsers = allUsers.filter((u) => u.isActive).length;
-      const publishedCourses = allCourses.filter(
-        (c) => c.status === "published",
-      ).length;
-      const totalSubmissions = allResults.length;
-      return { activeUsers, publishedCourses, totalSubmissions };
+    async function load() {
+      const [coursesRes, notifRes] = await Promise.all([
+        fetch("/api/courses"),
+        fetch("/api/notifications"),
+      ]);
+      const courses = await coursesRes.json();
+      const notifs = await notifRes.json();
+
+      setAnnouncements(
+        notifs.filter((n: any) => n.type === "announcement").slice(0, 5),
+      );
+
+      if (user!.role === "admin") {
+        const [usersRes, gradesRes] = await Promise.all([
+          fetch("/api/users"),
+          fetch("/api/grades?courseId="),
+        ]);
+        const users = await usersRes.json();
+        setData({
+          activeUsers: users.filter((u: any) => u.isActive).length,
+          publishedCourses: courses.filter((c: any) => c.status === "published")
+            .length,
+          totalCourses: courses.length,
+        });
+      } else if (user!.role === "instructor") {
+        setData({ myCourses: courses, enrolledCount: 0 });
+      } else {
+        // student
+        const progressRes = await Promise.all(
+          courses.map((c: any) =>
+            fetch(`/api/progress?courseId=${c._id}`).then((r) => r.json()),
+          ),
+        );
+        const courseProgress = courses.map((course: any, i: number) => {
+          const allVideos = course.modules?.flatMap((m: any) => m.videos) || [];
+          const completed = progressRes[i].filter(
+            (p: any) => p.completed,
+          ).length;
+          return {
+            course,
+            completed,
+            total: allVideos.length,
+            pct: allVideos.length
+              ? Math.round((completed / allVideos.length) * 100)
+              : 0,
+          };
+        });
+        const assessmentsRes = await fetch(`/api/assessments`);
+        const assessments = await assessmentsRes.json();
+        const gradesRes = await fetch(`/api/grades?courseId=`);
+        const grades = await gradesRes.json();
+        const pending = assessments.filter(
+          (a: any) =>
+            !grades.find(
+              (r: any) =>
+                r.assessmentId?._id === a._id || r.assessmentId === a._id,
+            ),
+        );
+        setData({ courseProgress, pending });
+      }
     }
 
-    if (user.role === "instructor") {
-      const myCourses = allCourses.filter((c) => c.createdBy === user.id);
-      const enrolledCount = allUsers.filter((u) =>
-        myCourses.some((c) => u.assignedCourses.includes(c.id)),
-      ).length;
-      const recentSubmissions = allResults
-        .filter((r) => myCourses.some((c) => c.id === r.courseId))
-        .sort((a, b) => b.gradedAt.localeCompare(a.gradedAt))
-        .slice(0, 5);
-      return { myCourses, enrolledCount, recentSubmissions };
-    }
-
-    // student
-    const assignedCourses = allCourses.filter((c) =>
-      user.assignedCourses.includes(c.id),
-    );
-    const courseProgress = assignedCourses.map((course) => {
-      const allVideos = course.modules.flatMap((m) => m.videos);
-      const completed = db.progress
-        .forCourse(user.id, course.id)
-        .filter((p) => p.completed).length;
-      return {
-        course,
-        completed,
-        total: allVideos.length,
-        pct: allVideos.length
-          ? Math.round((completed / allVideos.length) * 100)
-          : 0,
-      };
-    });
-    const assessments = db.assessments
-      .getAll()
-      .filter((a) => user.assignedCourses.includes(a.courseId));
-    const pending = assessments.filter(
-      (a) => !db.results.findByUser(user.id, a.id),
-    );
-    return { courseProgress, pending };
+    load();
   }, [user]);
 
-  const announcements = useMemo(
-    () =>
-      db.notifications
-        .forUser(user.id)
-        .filter((n) => n.type === "announcement")
-        .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-        .slice(0, 5),
-    [user.id],
-  );
+  if (!user || !data) return null;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -108,8 +115,7 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      {/* Admin stats */}
-      {user.role === "admin" && "activeUsers" in data && (
+      {user.role === "admin" && (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           <StatCard
             label="Active Users"
@@ -122,65 +128,28 @@ export default function DashboardPage() {
             icon={<BookOpen className="w-4 h-4" />}
           />
           <StatCard
-            label="Total Submissions"
-            value={data.totalSubmissions}
+            label="Total Courses"
+            value={data.totalCourses}
             icon={<ClipboardList className="w-4 h-4" />}
           />
         </div>
       )}
 
-      {/* Instructor stats */}
-      {user.role === "instructor" && "myCourses" in data && (
-        <>
-          <div className="grid grid-cols-2 gap-4">
-            <StatCard
-              label="My Courses"
-              value={data.myCourses.length}
-              icon={<BookOpen className="w-4 h-4" />}
-            />
-            <StatCard
-              label="Enrolled Staff"
-              value={data.enrolledCount}
-              icon={<Users className="w-4 h-4" />}
-            />
-          </div>
-          {data.recentSubmissions.length > 0 && (
-            <div className="bg-white border border-zinc-200 rounded-xl">
-              <div className="px-4 py-3 border-b border-zinc-100">
-                <h2 className="text-sm font-semibold text-zinc-900">
-                  Recent Submissions
-                </h2>
-              </div>
-              <ul className="divide-y divide-zinc-100">
-                {data.recentSubmissions.map((r) => {
-                  const u = db.users.findById(r.userId);
-                  const a = db.assessments.findById(r.assessmentId);
-                  return (
-                    <li
-                      key={r.id}
-                      className="px-4 py-3 flex items-center justify-between"
-                    >
-                      <div>
-                        <p className="text-sm font-medium text-zinc-900">
-                          {u?.name ?? "Unknown"}
-                        </p>
-                        <p className="text-xs text-zinc-500">
-                          {a?.title ?? "Assessment"}
-                        </p>
-                      </div>
-                      <Badge variant={r.passed ? "success" : "danger"}>
-                        {r.score}%
-                      </Badge>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          )}
-        </>
+      {user.role === "instructor" && (
+        <div className="grid grid-cols-2 gap-4">
+          <StatCard
+            label="My Courses"
+            value={data.myCourses?.length || 0}
+            icon={<BookOpen className="w-4 h-4" />}
+          />
+          <StatCard
+            label="Enrolled Staff"
+            value={data.enrolledCount || 0}
+            icon={<Users className="w-4 h-4" />}
+          />
+        </div>
       )}
 
-      {/* Student stats */}
       {user.role === "student" && "courseProgress" in data && (
         <>
           <div className="grid grid-cols-2 gap-4">
@@ -206,11 +175,11 @@ export default function DashboardPage() {
               </div>
               <ul className="divide-y divide-zinc-100">
                 {data.courseProgress.map(
-                  ({ course, completed, total, pct }) => (
-                    <li key={course.id} className="px-4 py-3">
+                  ({ course, completed, total, pct }: any) => (
+                    <li key={course._id} className="px-4 py-3">
                       <div className="flex items-center justify-between mb-1.5">
                         <Link
-                          href={`/courses/${course.id}`}
+                          href={`/courses/${course._id}`}
                           className="text-sm font-medium text-zinc-900 hover:text-indigo-700 transition-colors"
                         >
                           {course.title}
@@ -235,35 +204,30 @@ export default function DashboardPage() {
                 </h2>
               </div>
               <ul className="divide-y divide-zinc-100">
-                {data.pending.map((a) => {
-                  const course = db.courses.findById(a.courseId);
-                  return (
-                    <li
-                      key={a.id}
-                      className="px-4 py-3 flex items-center justify-between"
+                {data.pending.map((a: any) => (
+                  <li
+                    key={a._id}
+                    className="px-4 py-3 flex items-center justify-between"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-zinc-900">
+                        {a.title}
+                      </p>
+                    </div>
+                    <Link
+                      href={`/courses/${a.courseId}/assessment/${a._id}`}
+                      className="text-xs text-indigo-600 hover:underline"
                     >
-                      <div>
-                        <p className="text-sm font-medium text-zinc-900">
-                          {a.title}
-                        </p>
-                        <p className="text-xs text-zinc-500">{course?.title}</p>
-                      </div>
-                      <Link
-                        href={`/courses/${a.courseId}/assessment/${a.id}`}
-                        className="text-xs text-indigo-600 hover:underline"
-                      >
-                        Start →
-                      </Link>
-                    </li>
-                  );
-                })}
+                      Start →
+                    </Link>
+                  </li>
+                ))}
               </ul>
             </div>
           )}
         </>
       )}
 
-      {/* Announcements */}
       <div className="bg-white border border-zinc-200 rounded-xl">
         <div className="px-4 py-3 border-b border-zinc-100 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-zinc-900">
@@ -282,8 +246,8 @@ export default function DashboardPage() {
           </div>
         ) : (
           <ul className="divide-y divide-zinc-100">
-            {announcements.map((a) => (
-              <li key={a.id} className="px-4 py-3">
+            {announcements.map((a: any) => (
+              <li key={a._id} className="px-4 py-3">
                 <p className="text-sm text-zinc-900">{a.message}</p>
                 <p className="text-xs text-zinc-500 mt-0.5">
                   {new Date(a.createdAt).toLocaleDateString()}

@@ -1,8 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/useAuth";
-import { db } from "@/lib/mockStore";
-import { useMemo } from "react";
 import { useParams } from "next/navigation";
 import CourseForm from "@/components/instructor/CourseForm";
 import ModuleBuilder from "@/components/instructor/ModuleBuilder";
@@ -14,23 +13,27 @@ import { Breadcrumbs } from "@/components/ui/breadcrumbs";
 export default function CourseEditorPage() {
   const { user } = useAuth();
   const params = useParams<{ id: string }>();
+  const [course, setCourse] = useState<any>(null);
+  const [assigned, setAssigned] = useState<any[]>([]);
+  const [unassigned, setUnassigned] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([
+      fetch(`/api/courses/${params.id}`).then((r) => r.json()),
+      fetch(`/api/courses/${params.id}/assign`).then((r) => r.json()),
+    ])
+      .then(([c, users]) => {
+        setCourse(c);
+        setAssigned(users.assigned || []);
+        setUnassigned(users.unassigned || []);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [params.id]);
+
   if (!user || !["admin", "instructor"].includes(user.role)) return null;
-
-  const course = useMemo(() => db.courses.findById(params.id), [params.id]);
-  const allUsers = useMemo(
-    () => db.users.getAll().filter((u) => u.isActive && u.role === "student"),
-    [],
-  );
-
-  if (!course)
-    return <div className="text-sm text-zinc-400 p-6">Course not found.</div>;
-
-  const assigned = allUsers.filter((u) =>
-    u.assignedCourses.includes(params.id),
-  );
-  const unassigned = allUsers.filter(
-    (u) => !u.assignedCourses.includes(params.id),
-  );
+  if (loading || !course) return null;
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">

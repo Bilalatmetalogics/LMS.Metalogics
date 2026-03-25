@@ -1,23 +1,33 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/useAuth";
-import { db } from "@/lib/mockStore";
-import { useMemo } from "react";
 import Link from "next/link";
+
+type Course = {
+  _id: string;
+  title: string;
+  description: string;
+  category: string;
+  status: "draft" | "published";
+};
 
 export default function CoursesPage() {
   const { user } = useAuth();
-  if (!user) return null;
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const courses = useMemo(() => {
-    const all = db.courses.getAll();
-    if (user.role === "admin") return all;
-    if (user.role === "instructor")
-      return all.filter((c) => c.createdBy === user.id);
-    return all.filter(
-      (c) => user.assignedCourses.includes(c.id) && c.status === "published",
-    );
-  }, [user]);
+  useEffect(() => {
+    fetch("/api/courses")
+      .then((r) => r.json())
+      .then((data) => {
+        setCourses(data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  if (!user || loading) return null;
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -46,8 +56,8 @@ export default function CoursesPage() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {courses.map((c) => (
             <Link
-              key={c.id}
-              href={`/courses/${c.id}`}
+              key={c._id}
+              href={`/courses/${c._id}`}
               className="bg-white border border-zinc-200 rounded-xl p-4 hover:border-indigo-300 hover:shadow-sm transition group"
             >
               <div className="w-full h-32 bg-zinc-100 rounded-lg mb-3 flex items-center justify-center">

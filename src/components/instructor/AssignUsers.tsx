@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { db, MockUser } from "@/lib/mockStore";
+
+type User = { _id: string; name: string; email: string };
 
 export default function AssignUsers({
   courseId,
@@ -9,28 +10,25 @@ export default function AssignUsers({
   unassigned: init_u,
 }: {
   courseId: string;
-  assigned: MockUser[];
-  unassigned: MockUser[];
+  assigned: User[];
+  unassigned: User[];
 }) {
   const [assigned, setAssigned] = useState(init_a);
   const [unassigned, setUnassigned] = useState(init_u);
 
-  function toggle(user: MockUser, action: "assign" | "unassign") {
-    const u = db.users.findById(user.id)!;
+  async function toggle(user: User, action: "assign" | "unassign") {
+    await fetch(`/api/courses/${courseId}/assign`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userIds: [user._id], action }),
+    });
+
     if (action === "assign") {
-      db.users.upsert({
-        ...u,
-        assignedCourses: [...u.assignedCourses, courseId],
-      });
       setAssigned((p) => [...p, user]);
-      setUnassigned((p) => p.filter((x) => x.id !== user.id));
+      setUnassigned((p) => p.filter((x) => x._id !== user._id));
     } else {
-      db.users.upsert({
-        ...u,
-        assignedCourses: u.assignedCourses.filter((c) => c !== courseId),
-      });
       setUnassigned((p) => [...p, user]);
-      setAssigned((p) => p.filter((x) => x.id !== user.id));
+      setAssigned((p) => p.filter((x) => x._id !== user._id));
     }
   }
 
@@ -50,7 +48,7 @@ export default function AssignUsers({
           <ul className="divide-y divide-zinc-100 max-h-64 overflow-y-auto">
             {assigned.map((u) => (
               <li
-                key={u.id}
+                key={u._id}
                 className="flex items-center justify-between px-4 py-2.5"
               >
                 <div>
@@ -84,7 +82,7 @@ export default function AssignUsers({
           <ul className="divide-y divide-zinc-100 max-h-64 overflow-y-auto">
             {unassigned.map((u) => (
               <li
-                key={u.id}
+                key={u._id}
                 className="flex items-center justify-between px-4 py-2.5"
               >
                 <div>

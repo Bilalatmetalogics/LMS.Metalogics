@@ -1,12 +1,22 @@
 import type { NextAuthConfig } from "next-auth";
 
 // Edge-safe config — no Node.js modules (no mongoose, no bcrypt)
-// Used by proxy.ts (middleware) only.
 export const authConfig: NextAuthConfig = {
   session: { strategy: "jwt" },
   pages: { signIn: "/login" },
   providers: [],
   callbacks: {
+    authorized({ auth, request: { nextUrl } }) {
+      const isLoggedIn = !!auth?.user;
+      const pathname = nextUrl.pathname;
+      const isPublic =
+        pathname.startsWith("/login") ||
+        pathname.startsWith("/api/auth") ||
+        pathname.startsWith("/api/debug");
+
+      if (isPublic) return true;
+      return isLoggedIn;
+    },
     async jwt({ token, user }) {
       if (user) token.role = (user as any).role;
       return token;

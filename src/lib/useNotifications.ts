@@ -1,20 +1,30 @@
-// Zustand store for live notification badge count
-// Components call refresh() after adding a notification so TopBar updates instantly
-
 import { create } from "zustand";
-import { db } from "./mockStore";
 
 interface NotifState {
   unread: number;
-  refresh: (userId: string) => void;
+  refresh: () => Promise<void>;
+  markRead: (ids: string[]) => Promise<void>;
 }
 
 export const useNotifications = create<NotifState>((set) => ({
   unread: 0,
-  refresh: (userId: string) => {
-    const count = db.notifications
-      .forUser(userId)
-      .filter((n) => !n.read).length;
-    set({ unread: count });
+  refresh: async () => {
+    try {
+      const res = await fetch("/api/notifications");
+      if (!res.ok) return;
+      const data = await res.json();
+      const count = data.filter((n: any) => !n.read).length;
+      set({ unread: count });
+    } catch {}
+  },
+  markRead: async (ids: string[]) => {
+    try {
+      await fetch("/api/notifications", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids }),
+      });
+      set({ unread: 0 });
+    } catch {}
   },
 }));

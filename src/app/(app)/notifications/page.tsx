@@ -1,39 +1,42 @@
 "use client";
 
-import { useAuth } from "@/lib/useAuth";
-import { db } from "@/lib/mockStore";
-import { useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useNotifications } from "@/lib/useNotifications";
 import { Bell } from "lucide-react";
 
+type Notif = {
+  _id: string;
+  message: string;
+  link?: string;
+  read: boolean;
+  createdAt: string;
+};
+
 export default function NotificationsPage() {
-  const { user } = useAuth();
-  const { refresh } = useNotifications();
-  const [tick, setTick] = useState(0);
-  if (!user) return null;
+  const { refresh, markRead } = useNotifications();
+  const [notifications, setNotifications] = useState<Notif[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Refresh badge count when this page mounts
-  useMemo(() => {
-    if (user) refresh(user.id);
-  }, [user?.id]); // eslint-disable-line
-
-  const notifications = useMemo(
-    () =>
-      db.notifications
-        .forUser(user.id)
-        .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
-    [user.id, tick],
-  );
-
-  function markAllRead() {
-    db.notifications.markRead(
-      user!.id,
-      notifications.map((n) => n.id),
-    );
-    refresh(user!.id);
-    setTick((t) => t + 1);
+  async function load() {
+    const res = await fetch("/api/notifications");
+    if (res.ok) setNotifications(await res.json());
+    setLoading(false);
   }
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  async function markAllRead() {
+    const unreadIds = notifications.filter((n) => !n.read).map((n) => n._id);
+    if (!unreadIds.length) return;
+    await markRead(unreadIds);
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    refresh();
+  }
+
+  if (loading) return null;
 
   return (
     <div className="max-w-2xl mx-auto space-y-4">
@@ -59,7 +62,7 @@ export default function NotificationsPage() {
           <ul className="divide-y divide-zinc-100">
             {notifications.map((n) => (
               <li
-                key={n.id}
+                key={n._id}
                 className={`px-4 py-3 flex items-start gap-3 ${!n.read ? "bg-indigo-50/40" : ""}`}
               >
                 <div

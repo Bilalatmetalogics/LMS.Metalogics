@@ -1,69 +1,76 @@
 "use client";
 
 import { useState } from "react";
-import { db, MockAssessment, MockResult } from "@/lib/mockStore";
-import { useAuth } from "@/lib/useAuth";
 import { useRouter } from "next/navigation";
 import { useNotifications } from "@/lib/useNotifications";
+
+type Question = {
+  _id: string;
+  type: "mcq" | "truefalse" | "short";
+  text: string;
+  options?: string[];
+};
+
+type Assessment = {
+  _id: string;
+  title: string;
+  passingScore: number;
+  questions: Question[];
+};
 
 export default function AssessmentTaker({
   assessment,
   courseId,
 }: {
-  assessment: MockAssessment;
+  assessment: Assessment;
   courseId: string;
 }) {
-  const { user } = useAuth();
   const router = useRouter();
   const { refresh } = useNotifications();
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
 
-  const allAnswered = assessment.questions.every((q) => answers[q.id]?.trim());
+  const allAnswered = assessment.questions.every((q) => answers[q._id]?.trim());
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!user) return;
+    if (!allAnswered) return;
     setSubmitting(true);
+    setError("");
 
-    const autoQs = assessment.questions.filter((q) => q.type !== "short");
-    const correct = autoQs.filter(
-      (q) => answers[q.id]?.toLowerCase() === q.correctAnswer?.toLowerCase(),
-    ).length;
-    const score =
-      autoQs.length > 0 ? Math.round((correct / autoQs.length) * 100) : 0;
-    const passed = score >= assessment.passingScore;
+    try {
+      const res = await fetch(`/api/assessments/${assessment._id}/submit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          courseId,
+          answers: Object.entries(answers).map(([questionId, answer]) => ({
+            questionId,
+            answer,
+          })),
+        }),
+      });
 
-    const result: MockResult = {
-      id: crypto.randomUUID(),
-      userId: user.id,
-      assessmentId: assessment.id,
-      courseId,
-      score,
-      passed,
-      gradedAt: new Date().toISOString(),
-    };
-    db.results.add(result);
-    db.notifications.add({
-      id: crypto.randomUUID(),
-      userId: user.id,
-      type: "grade",
-      message: `Assessment graded: ${score}% — ${passed ? "Passed ✓" : "Not passed"}`,
-      link: `/courses/${courseId}`,
-      read: false,
-      createdAt: new Date().toISOString(),
-    });
-
-    refresh(user.id);
-    router.refresh();
-    setSubmitting(false);
+      if (!res.ok) throw new Error("Submission failed");
+      await refresh();
+      router.refresh();
+    } catch (err: any) {
+      setError(err.message || "Something went wrong");
+      setSubmitting(false);
+    }
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {error && (
+        <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+          {error}
+        </p>
+      )}
       {assessment.questions.map((q, idx) => (
         <div
-          key={q.id}
+          key={q._id}
           className="bg-white border border-zinc-200 rounded-xl p-4 space-y-3"
         >
           <p className="text-sm font-medium text-zinc-900">
@@ -72,17 +79,17 @@ export default function AssessmentTaker({
           </p>
           {q.type === "mcq" && (
             <div className="space-y-2">
-              {q.options.filter(Boolean).map((opt) => (
+              {(q.options || []).filter(Boolean).map((opt) => (
                 <label
                   key={opt}
                   className="flex items-center gap-2.5 cursor-pointer group"
                 >
                   <input
                     type="radio"
-                    name={`q-${q.id}`}
+                    name={`q-${q._id}`}
                     value={opt}
-                    checked={answers[q.id] === opt}
-                    onChange={() => setAnswers((p) => ({ ...p, [q.id]: opt }))}
+                    checked={answers[q._id] === opt}
+                    onChange={() => setAnswers((p) => ({ ...p, [q._id]: opt }))}
                     className="accent-indigo-600"
                   />
                   <span className="text-sm text-zinc-700 group-hover:text-zinc-900">
@@ -101,10 +108,10 @@ export default function AssessmentTaker({
                 >
                   <input
                     type="radio"
-                    name={`q-${q.id}`}
+                    name={`q-${q._id}`}
                     value={val}
-                    checked={answers[q.id] === val}
-                    onChange={() => setAnswers((p) => ({ ...p, [q.id]: val }))}
+                    checked={answers[q._id] === val}
+                    onChange={() => setAnswers((p) => ({ ...p, [q._id]: val }))}
                     className="accent-indigo-600"
                   />
                   <span className="text-sm text-zinc-700">{val}</span>
@@ -114,9 +121,9 @@ export default function AssessmentTaker({
           )}
           {q.type === "short" && (
             <textarea
-              value={answers[q.id] || ""}
+              value={answers[q._id] || ""}
               onChange={(e) =>
-                setAnswers((p) => ({ ...p, [q.id]: e.target.value }))
+                setAnswers((p) => ({ ...p, [q._id]: e.target.value }))
               }
               rows={3}
               aria-label={`Answer for question ${idx + 1}`}

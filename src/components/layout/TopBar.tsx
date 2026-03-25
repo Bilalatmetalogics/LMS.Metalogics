@@ -17,8 +17,8 @@ export default function TopBar({
   const { unread, refresh } = useNotifications();
 
   useEffect(() => {
-    refresh(user.id);
-  }, [user.id, refresh]);
+    refresh();
+  }, [refresh]);
 
   function handleLogout() {
     logout();
