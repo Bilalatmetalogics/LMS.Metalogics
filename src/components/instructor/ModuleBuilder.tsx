@@ -1,17 +1,47 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronRight, PlayCircle, Trash2, Upload } from "lucide-react";
+import {
+  ChevronRight,
+  PlayCircle,
+  Link2,
+  FileText,
+  Youtube,
+  Trash2,
+} from "lucide-react";
 
-type Video = {
+type ContentType = "video" | "youtube" | "link" | "pdf";
+
+type ContentItem = {
   _id: string;
   title: string;
   url: string;
+  type: ContentType;
   duration: number;
+  description?: string;
   order: number;
 };
-type Module = { _id: string; title: string; order: number; videos: Video[] };
+type Module = {
+  _id: string;
+  title: string;
+  order: number;
+  videos: ContentItem[];
+};
 type Course = { _id: string; modules: Module[] };
+
+const TYPE_ICONS: Record<ContentType, React.ReactNode> = {
+  video: <PlayCircle className="w-4 h-4 text-zinc-400" />,
+  youtube: <Youtube className="w-4 h-4 text-red-400" />,
+  link: <Link2 className="w-4 h-4 text-blue-400" />,
+  pdf: <FileText className="w-4 h-4 text-orange-400" />,
+};
+
+const TYPE_LABELS: Record<ContentType, string> = {
+  video: "Video",
+  youtube: "YouTube",
+  link: "Link",
+  pdf: "PDF",
+};
 
 export default function ModuleBuilder({ course }: { course: Course }) {
   const [modules, setModules] = useState<Module[]>(course.modules);
@@ -32,7 +62,7 @@ export default function ModuleBuilder({ course }: { course: Course }) {
     }
   }
 
-  async function deleteVideo(moduleId: string, videoId: string) {
+  async function deleteItem(moduleId: string, videoId: string) {
     const res = await fetch(
       `/api/courses/${course._id}/modules/${moduleId}/videos`,
       {
@@ -45,10 +75,6 @@ export default function ModuleBuilder({ course }: { course: Course }) {
       const updated = await res.json();
       setModules(updated.modules);
     }
-  }
-
-  function onVideoAdded(updatedCourse: any) {
-    setModules(updatedCourse.modules);
   }
 
   return (
@@ -74,7 +100,7 @@ export default function ModuleBuilder({ course }: { course: Course }) {
               </span>
             </div>
             <span className="text-xs text-zinc-400">
-              {mod.videos.length} video{mod.videos.length !== 1 ? "s" : ""}
+              {mod.videos.length} item{mod.videos.length !== 1 ? "s" : ""}
             </span>
           </button>
 
@@ -82,25 +108,30 @@ export default function ModuleBuilder({ course }: { course: Course }) {
             <div className="border-t border-zinc-100 px-4 py-3 space-y-3">
               {mod.videos.length > 0 && (
                 <ul className="space-y-2">
-                  {mod.videos.map((v) => (
+                  {mod.videos.map((item) => (
                     <li
-                      key={v._id}
+                      key={item._id}
                       className="flex items-center justify-between py-2 px-3 bg-zinc-50 rounded-lg"
                     >
-                      <div className="flex items-center gap-2">
-                        <PlayCircle className="w-4 h-4 text-zinc-400" />
-                        <span className="text-sm text-zinc-700">{v.title}</span>
-                        {v.duration > 0 && (
-                          <span className="text-xs text-zinc-400">
-                            {Math.floor(v.duration / 60)}m
+                      <div className="flex items-center gap-2 min-w-0">
+                        {TYPE_ICONS[item.type || "video"]}
+                        <span className="text-sm text-zinc-700 truncate">
+                          {item.title}
+                        </span>
+                        <span className="text-xs text-zinc-400 shrink-0 px-1.5 py-0.5 bg-zinc-100 rounded">
+                          {TYPE_LABELS[item.type || "video"]}
+                        </span>
+                        {item.duration > 0 && (
+                          <span className="text-xs text-zinc-400 shrink-0">
+                            {Math.floor(item.duration / 60)}m
                           </span>
                         )}
                       </div>
                       <button
                         type="button"
-                        onClick={() => deleteVideo(mod._id, v._id)}
-                        className="text-zinc-400 hover:text-red-500 transition-colors"
-                        aria-label="Remove video"
+                        onClick={() => deleteItem(mod._id, item._id)}
+                        className="text-zinc-400 hover:text-red-500 transition-colors ml-2 shrink-0"
+                        aria-label="Remove item"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -108,10 +139,10 @@ export default function ModuleBuilder({ course }: { course: Course }) {
                   ))}
                 </ul>
               )}
-              <AddVideoForm
+              <AddContentForm
                 courseId={course._id}
                 moduleId={mod._id}
-                onAdded={onVideoAdded}
+                onAdded={(updated) => setModules(updated.modules)}
               />
             </div>
           )}
@@ -141,7 +172,7 @@ export default function ModuleBuilder({ course }: { course: Course }) {
   );
 }
 
-function AddVideoForm({
+function AddContentForm({
   courseId,
   moduleId,
   onAdded,
@@ -150,9 +181,10 @@ function AddVideoForm({
   moduleId: string;
   onAdded: (course: any) => void;
 }) {
-  const [tab, setTab] = useState<"url" | "file">("url");
+  const [type, setType] = useState<ContentType>("video");
   const [title, setTitle] = useState("");
   const [url, setUrl] = useState("");
+  const [description, setDescription] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -161,12 +193,13 @@ function AddVideoForm({
   function reset() {
     setTitle("");
     setUrl("");
+    setDescription("");
     setFile(null);
     setProgress(0);
     setError("");
   }
 
-  async function getDuration(src: string): Promise<number> {
+  async function getVideoDuration(src: string): Promise<number> {
     return new Promise((resolve) => {
       const v = document.createElement("video");
       v.preload = "metadata";
@@ -176,20 +209,26 @@ function AddVideoForm({
     });
   }
 
-  async function saveVideo(videoUrl: string, duration: number) {
+  async function saveItem(itemUrl: string, duration = 0) {
     const res = await fetch(
       `/api/courses/${courseId}/modules/${moduleId}/videos`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, url: videoUrl, duration }),
+        body: JSON.stringify({
+          title,
+          url: itemUrl,
+          type,
+          duration,
+          description,
+        }),
       },
     );
     if (res.ok) {
       onAdded(await res.json());
       reset();
     } else {
-      setError("Failed to save video");
+      setError("Failed to save item");
     }
   }
 
@@ -199,20 +238,9 @@ function AddVideoForm({
     setUploading(true);
     setError("");
 
-    if (tab === "url") {
-      if (!url.trim()) {
-        setUploading(false);
-        return;
-      }
-      const duration = await getDuration(url);
-      await saveVideo(url, duration);
-    } else {
-      if (!file) {
-        setUploading(false);
-        return;
-      }
-      try {
-        // Get signed upload params from Cloudinary
+    try {
+      if (type === "video" && file) {
+        // Cloudinary upload
         const sigRes = await fetch("/api/upload?folder=lms/videos");
         if (!sigRes.ok) throw new Error("Could not get upload signature");
         const { signature, timestamp, cloudName, apiKey, folder } =
@@ -242,16 +270,64 @@ function AddVideoForm({
         });
 
         if (result.error) throw new Error(result.error.message);
-        await saveVideo(result.secure_url, Math.round(result.duration || 0));
-      } catch (err: any) {
-        setError(err.message || "Upload failed");
+        await saveItem(result.secure_url, Math.round(result.duration || 0));
+      } else if (type === "pdf" && file) {
+        // Cloudinary raw upload for PDF
+        const sigRes = await fetch(
+          "/api/upload?resource_type=raw&folder=lms/docs",
+        );
+        if (!sigRes.ok) throw new Error("Could not get upload signature");
+        const { signature, timestamp, cloudName, apiKey, folder } =
+          await sigRes.json();
+
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("signature", signature);
+        formData.append("timestamp", timestamp);
+        formData.append("api_key", apiKey);
+        formData.append("folder", folder);
+
+        const xhr = new XMLHttpRequest();
+        xhr.upload.onprogress = (ev) => {
+          if (ev.lengthComputable)
+            setProgress(Math.round((ev.loaded / ev.total) * 100));
+        };
+
+        const result: any = await new Promise((resolve, reject) => {
+          xhr.onload = () => resolve(JSON.parse(xhr.responseText));
+          xhr.onerror = reject;
+          xhr.open(
+            "POST",
+            `https://api.cloudinary.com/v1_1/${cloudName}/raw/upload`,
+          );
+          xhr.send(formData);
+        });
+
+        if (result.error) throw new Error(result.error.message);
+        await saveItem(result.secure_url);
+      } else {
+        // URL-based: video url, youtube, link, or pdf url
+        if (!url.trim()) throw new Error("URL is required");
+        const duration = type === "video" ? await getVideoDuration(url) : 0;
+        await saveItem(url, duration);
       }
+    } catch (err: any) {
+      setError(err.message || "Failed");
     }
+
     setUploading(false);
   }
 
+  const needsFile = (type === "video" || type === "pdf") && !url.trim();
   const canSubmit =
-    title.trim() && (tab === "url" ? url.trim() : !!file) && !uploading;
+    title.trim() && (needsFile ? !!file : url.trim()) && !uploading;
+
+  const placeholders: Record<ContentType, string> = {
+    video: "https://example.com/video.mp4",
+    youtube: "https://www.youtube.com/watch?v=...",
+    link: "https://example.com/article",
+    pdf: "https://example.com/document.pdf",
+  };
 
   return (
     <form
@@ -260,68 +336,100 @@ function AddVideoForm({
     >
       <div className="flex items-center justify-between">
         <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider">
-          Add Video
+          Add Content
         </p>
+        {/* Type selector */}
         <div className="flex rounded-md border border-zinc-200 overflow-hidden text-xs">
-          <button
-            type="button"
-            onClick={() => setTab("url")}
-            className={`px-2.5 py-1 transition-colors ${tab === "url" ? "bg-zinc-900 text-white" : "text-zinc-500 hover:bg-zinc-50"}`}
-          >
-            Paste URL
-          </button>
-          <button
-            type="button"
-            onClick={() => setTab("file")}
-            className={`px-2.5 py-1 transition-colors border-l border-zinc-200 ${tab === "file" ? "bg-zinc-900 text-white" : "text-zinc-500 hover:bg-zinc-50"}`}
-          >
-            Upload file
-          </button>
+          {(["video", "youtube", "link", "pdf"] as ContentType[]).map((t) => (
+            <button
+              key={t}
+              type="button"
+              onClick={() => {
+                setType(t);
+                setUrl("");
+                setFile(null);
+                setError("");
+              }}
+              className={`px-2.5 py-1 transition-colors border-l first:border-l-0 border-zinc-200 capitalize ${
+                type === t
+                  ? "bg-zinc-900 text-white"
+                  : "text-zinc-500 hover:bg-zinc-50"
+              }`}
+            >
+              {t}
+            </button>
+          ))}
         </div>
       </div>
+
       {error && <p className="text-xs text-red-600">{error}</p>}
+
+      {/* Title */}
       <div className="space-y-1">
-        <label htmlFor={`vt-${moduleId}`} className="text-xs text-zinc-500">
+        <label htmlFor={`ct-${moduleId}`} className="text-xs text-zinc-500">
           Title
         </label>
         <input
-          id={`vt-${moduleId}`}
+          id={`ct-${moduleId}`}
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Video title"
+          placeholder="Item title"
           className="w-full px-3 py-1.5 text-sm border border-zinc-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
         />
       </div>
-      {tab === "url" ? (
+
+      {/* URL input — always shown for youtube/link, optional for video/pdf */}
+      <div className="space-y-1">
+        <label htmlFor={`cu-${moduleId}`} className="text-xs text-zinc-500">
+          {type === "video" || type === "pdf" ? "URL (or upload below)" : "URL"}
+        </label>
+        <input
+          id={`cu-${moduleId}`}
+          type="url"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          placeholder={placeholders[type]}
+          className="w-full px-3 py-1.5 text-sm border border-zinc-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+      </div>
+
+      {/* File upload — only for video and pdf */}
+      {(type === "video" || type === "pdf") && (
         <div className="space-y-1">
-          <label htmlFor={`vu-${moduleId}`} className="text-xs text-zinc-500">
-            Video URL
+          <label htmlFor={`cf-${moduleId}`} className="text-xs text-zinc-500">
+            {type === "pdf" ? "Upload PDF" : "Upload video file"}
           </label>
           <input
-            id={`vu-${moduleId}`}
-            type="url"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            placeholder="https://example.com/video.mp4"
-            className="w-full px-3 py-1.5 text-sm border border-zinc-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-        </div>
-      ) : (
-        <div className="space-y-1">
-          <label htmlFor={`vf-${moduleId}`} className="text-xs text-zinc-500">
-            Video file
-          </label>
-          <input
-            id={`vf-${moduleId}`}
+            id={`cf-${moduleId}`}
             type="file"
-            accept="video/*"
-            onChange={(e) => setFile(e.target.files?.[0] || null)}
+            accept={type === "pdf" ? "application/pdf" : "video/*"}
+            onChange={(e) => {
+              setFile(e.target.files?.[0] || null);
+              setUrl("");
+            }}
             className="w-full text-sm text-zinc-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-medium file:bg-zinc-100 file:text-zinc-700 hover:file:bg-zinc-200"
           />
         </div>
       )}
-      {uploading && (
+
+      {/* Optional description */}
+      <div className="space-y-1">
+        <label htmlFor={`cd-${moduleId}`} className="text-xs text-zinc-500">
+          Description (optional)
+        </label>
+        <input
+          id={`cd-${moduleId}`}
+          type="text"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Brief note for learners..."
+          className="w-full px-3 py-1.5 text-sm border border-zinc-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+      </div>
+
+      {/* Upload progress */}
+      {uploading && progress > 0 && (
         <div className="space-y-1">
           <div className="h-1.5 bg-zinc-100 rounded-full overflow-hidden">
             <div
@@ -332,12 +440,13 @@ function AddVideoForm({
           <p className="text-xs text-zinc-400">{progress}%</p>
         </div>
       )}
+
       <button
         type="submit"
         disabled={!canSubmit}
         className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white text-xs font-medium rounded-lg transition-colors"
       >
-        {uploading ? "Processing..." : "Add video"}
+        {uploading ? "Processing..." : "Add item"}
       </button>
     </form>
   );

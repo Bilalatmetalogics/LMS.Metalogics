@@ -11,9 +11,18 @@ import {
   PlayCircle,
   ClipboardList,
   ChevronRight,
+  Link2,
+  FileText,
+  Youtube,
 } from "lucide-react";
 
-type Video = { _id: string; title: string; duration: number };
+type ContentType = "video" | "youtube" | "link" | "pdf";
+type Video = {
+  _id: string;
+  title: string;
+  duration: number;
+  type?: ContentType;
+};
 type Module = { _id: string; title: string; videos: Video[] };
 type Course = {
   _id: string;
@@ -131,6 +140,12 @@ export default function CourseDetailPage() {
                   >
                     {progressMap[v._id]?.completed ? (
                       <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
+                    ) : v.type === "youtube" ? (
+                      <Youtube className="w-4 h-4 text-red-400 shrink-0" />
+                    ) : v.type === "link" ? (
+                      <Link2 className="w-4 h-4 text-blue-400 shrink-0" />
+                    ) : v.type === "pdf" ? (
+                      <FileText className="w-4 h-4 text-orange-400 shrink-0" />
                     ) : (
                       <PlayCircle className="w-4 h-4 text-zinc-300 shrink-0" />
                     )}

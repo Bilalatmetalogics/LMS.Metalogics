@@ -2,10 +2,59 @@
 
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { CheckCircle2, PlayCircle, Lock } from "lucide-react";
+import {
+  CheckCircle2,
+  PlayCircle,
+  Lock,
+  Link2,
+  FileText,
+  Youtube,
+} from "lucide-react";
 
-type Video = { _id: string; title: string; order: number; duration: number };
-type Module = { _id: string; title: string; order: number; videos: Video[] };
+type ContentType = "video" | "youtube" | "link" | "pdf";
+
+type ContentItem = {
+  _id: string;
+  title: string;
+  type: ContentType;
+  order: number;
+  duration: number;
+};
+type Module = {
+  _id: string;
+  title: string;
+  order: number;
+  videos: ContentItem[];
+};
+
+function ItemIcon({
+  type,
+  completed,
+  active,
+}: {
+  type: ContentType;
+  completed?: boolean;
+  active?: boolean;
+}) {
+  if (completed)
+    return <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0 text-green-500" />;
+
+  const cls = cn(
+    "w-4 h-4 mt-0.5 shrink-0",
+    active ? "text-indigo-600" : "text-zinc-400",
+  );
+
+  switch (type) {
+    case "youtube":
+      return <Youtube className={cls} />;
+    case "link":
+      return <Link2 className={cls} />;
+    case "pdf":
+      return <FileText className={cls} />;
+    default:
+      return <PlayCircle className={cls} />;
+  }
+}
 
 export default function CourseSidebar({
   course,
@@ -36,8 +85,8 @@ export default function CourseSidebar({
             <p className="px-4 py-2 text-xs font-semibold text-zinc-400 uppercase tracking-wider">
               {mod.title}
             </p>
-            {mod.videos.map((video) => {
-              const vid = video._id.toString();
+            {mod.videos.map((item) => {
+              const vid = item._id.toString();
               const unlocked = unlockedSet.has(vid);
               const progress = progressMap[vid];
               const pct =
@@ -48,9 +97,10 @@ export default function CourseSidebar({
                     )
                   : 0;
               const isActive = vid === activeVideoId;
+              const type = item.type || "video";
 
               return (
-                <div key={vid} className="relative">
+                <div key={vid}>
                   {unlocked ? (
                     <Link
                       href={`/courses/${course._id}/learn?video=${vid}`}
@@ -61,15 +111,17 @@ export default function CourseSidebar({
                           : "text-zinc-700 hover:bg-zinc-50",
                       )}
                     >
-                      <VideoIcon
+                      <ItemIcon
+                        type={type}
                         completed={progress?.completed}
                         active={isActive}
                       />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm leading-snug line-clamp-2">
-                          {video.title}
+                          {item.title}
                         </p>
-                        {pct > 0 && (
+                        {/* Progress bar — only for video type */}
+                        {type === "video" && pct > 0 && (
                           <div className="mt-1 h-0.5 bg-zinc-100 rounded-full overflow-hidden">
                             <div
                               className="h-full bg-indigo-400 rounded-full"
@@ -81,9 +133,9 @@ export default function CourseSidebar({
                     </Link>
                   ) : (
                     <div className="flex items-start gap-3 px-4 py-2.5 text-sm opacity-40 cursor-not-allowed">
-                      <LockIcon />
+                      <Lock className="w-4 h-4 mt-0.5 shrink-0 text-zinc-400" />
                       <p className="text-sm leading-snug line-clamp-2 text-zinc-500">
-                        {video.title}
+                        {item.title}
                       </p>
                     </div>
                   )}
@@ -95,27 +147,4 @@ export default function CourseSidebar({
       </div>
     </aside>
   );
-}
-
-function VideoIcon({
-  completed,
-  active,
-}: {
-  completed?: boolean;
-  active?: boolean;
-}) {
-  if (completed)
-    return <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0 text-green-500" />;
-  return (
-    <PlayCircle
-      className={cn(
-        "w-4 h-4 mt-0.5 shrink-0",
-        active ? "text-indigo-600" : "text-zinc-400",
-      )}
-    />
-  );
-}
-
-function LockIcon() {
-  return <Lock className="w-4 h-4 mt-0.5 shrink-0 text-zinc-400" />;
 }

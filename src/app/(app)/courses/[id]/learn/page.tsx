@@ -2,17 +2,26 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
-import VideoPlayer from "@/components/learn/VideoPlayer";
+import ContentViewer from "@/components/learn/ContentViewer";
 import CourseSidebar from "@/components/learn/CourseSidebar";
 
-type Video = {
+type ContentType = "video" | "youtube" | "link" | "pdf";
+
+type ContentItem = {
   _id: string;
   title: string;
   url: string;
+  type: ContentType;
   duration: number;
+  description?: string;
   order: number;
 };
-type Module = { _id: string; title: string; order: number; videos: Video[] };
+type Module = {
+  _id: string;
+  title: string;
+  order: number;
+  videos: ContentItem[];
+};
 type Course = { _id: string; title: string; modules: Module[] };
 type Progress = {
   videoId: string;
@@ -48,45 +57,46 @@ export default function LearnPage() {
 
   if (loading || !course) return null;
 
-  const allVideos = course.modules.flatMap((m) => m.videos);
+  const allItems = course.modules.flatMap((m) => m.videos);
   const progressMap: Record<string, Progress> = {};
   progressList.forEach((p) => {
     progressMap[p.videoId] = p;
   });
 
-  // Unlock logic: first video always unlocked, next unlocks after prev completed
+  // Unlock logic: first item always unlocked; each subsequent unlocks after prev completed.
+  // Non-video items (link, pdf, youtube) are auto-completed on first view (handled in ContentViewer).
   const unlockedIds = new Set<string>();
-  for (let i = 0; i < allVideos.length; i++) {
+  for (let i = 0; i < allItems.length; i++) {
     if (i === 0) {
-      unlockedIds.add(allVideos[i]._id);
+      unlockedIds.add(allItems[i]._id);
       continue;
     }
-    if (progressMap[allVideos[i - 1]._id]?.completed)
-      unlockedIds.add(allVideos[i]._id);
+    if (progressMap[allItems[i - 1]._id]?.completed)
+      unlockedIds.add(allItems[i]._id);
   }
 
-  const activeVideoId = searchParams.get("video") || allVideos[0]?._id;
-  const activeVideo = allVideos.find((v) => v._id === activeVideoId);
+  const activeItemId = searchParams.get("video") || allItems[0]?._id;
+  const activeItem = allItems.find((v) => v._id === activeItemId);
 
   return (
     <div className="flex h-full gap-0 -m-6">
       <CourseSidebar
         course={course}
-        activeVideoId={activeVideoId}
+        activeVideoId={activeItemId}
         unlockedIds={Array.from(unlockedIds)}
         progressMap={progressMap}
       />
       <div className="flex-1 overflow-y-auto p-6">
-        {activeVideo ? (
-          <VideoPlayer
-            video={activeVideo}
+        {activeItem ? (
+          <ContentViewer
+            item={activeItem}
             courseId={params.id}
-            initialProgress={progressMap[activeVideoId]?.watchedSeconds || 0}
+            initialProgress={progressMap[activeItemId]?.watchedSeconds || 0}
             onProgressSaved={loadProgress}
           />
         ) : (
           <div className="flex items-center justify-center h-64 text-sm text-zinc-400">
-            No videos available.
+            No content available.
           </div>
         )}
       </div>

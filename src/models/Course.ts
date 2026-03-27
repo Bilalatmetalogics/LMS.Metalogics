@@ -1,11 +1,16 @@
 import mongoose, { Schema, Document } from "mongoose";
 
+export type ContentType = "video" | "youtube" | "link" | "pdf";
+
 export interface IVideo {
   _id: mongoose.Types.ObjectId;
   title: string;
   order: number;
-  url: string;
-  duration: number; // seconds
+  url: string; // raw Cloudinary URL or external URL
+  publicId?: string; // Cloudinary public_id — present only for uploaded assets
+  type: ContentType;
+  duration: number; // seconds — only relevant for video/youtube
+  description?: string;
   thumbnailUrl?: string;
 }
 
@@ -32,7 +37,14 @@ const VideoSchema = new Schema<IVideo>({
   title: { type: String, required: true },
   order: { type: Number, required: true },
   url: { type: String, required: true },
+  publicId: String,
+  type: {
+    type: String,
+    enum: ["video", "youtube", "link", "pdf"],
+    default: "video",
+  },
   duration: { type: Number, default: 0 },
+  description: String,
   thumbnailUrl: String,
 });
 

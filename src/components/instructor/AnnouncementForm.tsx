@@ -1,9 +1,6 @@
 "use client";
 
-import { useState } from "react";);
-
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = u"");
+import { useState } from "react";
 
 export default function AnnouncementForm({ courseId }: { courseId?: string }) {
   const [form, setForm] = useState({ title: "", body: "" });
@@ -48,7 +45,10 @@ export default function AnnouncementForm({ courseId }: { courseId?: string }) {
         </p>
       )}
       <div className="space-y-1">
-        <label htmlFor="ann-title" className="text-sm font-medium text-zinc-700">
+        <label
+          htmlFor="ann-title"
+          className="text-sm font-medium text-zinc-700"
+        >
           Title
         </label>
         <input
