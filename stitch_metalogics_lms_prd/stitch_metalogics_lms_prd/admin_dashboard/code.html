@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MetaLogics Admin Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-container": "#eeedf7",
+                        "surface-container-highest": "#e3e1ec",
+                        "inverse-primary": "#c3c0ff",
+                        "on-tertiary-fixed": "#351000",
+                        "on-tertiary-fixed-variant": "#7b2f00",
+                        "primary-container": "#4f46e5",
+                        "secondary": "#58579b",
+                        "tertiary-fixed": "#ffdbcc",
+                        "on-primary-fixed": "#0f0069",
+                        "error-container": "#ffdad6",
+                        "outline": "#777587",
+                        "on-primary-container": "#dad7ff",
+                        "tertiary": "#7e3000",
+                        "surface-tint": "#4d44e3",
+                        "tertiary-fixed-dim": "#ffb695",
+                        "on-secondary-container": "#454386",
+                        "tertiary-container": "#a44100",
+                        "surface-variant": "#e3e1ec",
+                        "inverse-on-surface": "#f1effa",
+                        "surface-container-high": "#e8e7f1",
+                        "on-secondary-fixed": "#140f54",
+                        "primary": "#3525cd",
+                        "inverse-surface": "#2f3038",
+                        "surface": "#fbf8ff",
+                        "outline-variant": "#c7c4d8",
+                        "surface-container-low": "#f4f2fd",
+                        "on-surface": "#1a1b22",
+                        "on-secondary-fixed-variant": "#413f82",
+                        "error": "#ba1a1a",
+                        "primary-fixed-dim": "#c3c0ff",
+                        "secondary-fixed-dim": "#c3c0ff",
+                        "background": "#fbf8ff",
+                        "on-primary-fixed-variant": "#3323cc",
+                        "on-background": "#1a1b22",
+                        "on-secondary": "#ffffff",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-fixed": "#e2dfff",
+                        "surface-bright": "#fbf8ff",
+                        "on-tertiary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "secondary-fixed": "#e2dfff",
+                        "on-surface-variant": "#464555",
+                        "surface-dim": "#dad9e3",
+                        "secondary-container": "#b6b4ff",
+                        "on-primary": "#ffffff",
+                        "on-tertiary-container": "#ffd2be",
+                        "on-error-container": "#93000a"
+                    },
+                    fontFamily: {
+                        "headline": ["Inter", "sans-serif"],
+                        "body": ["Inter", "sans-serif"],
+                        "label": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fbf8ff;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(24px);
+        }
+    </style>
+</head>
+<body class="antialiased text-on-surface">
+<!-- SideNavBar Component -->
+<aside class="w-[224px] h-screen fixed left-0 top-0 bg-zinc-50 dark:bg-zinc-950 flex flex-col p-4 gap-2 font-inter antialiased text-sm font-medium z-50">
+<div class="mb-8 px-2 flex flex-col gap-1">
+<span class="text-xl font-black tracking-tight text-indigo-700 dark:text-indigo-400">MetaLogics</span>
+<span class="text-[10px] uppercase tracking-widest text-zinc-400 font-bold">Admin Console</span>
+</div>
+<nav class="flex-1 flex flex-col gap-1">
+<a class="flex items-center gap-3 px-4 py-2 bg-indigo-600 text-white rounded-lg shadow-sm shadow-indigo-200 active:scale-[0.98] transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50 transition-colors active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span>Overview</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50 transition-colors active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined" data-icon="school">school</span>
+<span>Courses</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50 transition-colors active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+<span>Users</span>
+</a>
+</nav>
+<div class="mt-auto flex flex-col gap-1 pt-4 border-t border-zinc-200/50 dark:border-zinc-800/50">
+<a class="flex items-center gap-3 px-4 py-2 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span>Settings</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-2 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50 transition-colors" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span>Help</span>
+</a>
+<div class="mt-4 p-4 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300">
+<p class="text-xs font-bold mb-2">Pro Access</p>
+<button class="w-full py-2 bg-indigo-600 text-white rounded-lg text-xs font-bold shadow-md shadow-indigo-100 transition-transform active:scale-95">Upgrade Plan</button>
+</div>
+</div>
+</aside>
+<!-- TopNavBar Component -->
+<header class="h-16 fixed top-0 right-0 left-[224px] z-40 bg-white/70 dark:bg-zinc-950/70 backdrop-blur-xl border-b border-zinc-200/50 dark:border-zinc-800/50 shadow-sm shadow-zinc-200/10 flex items-center justify-between px-8 font-inter text-sm font-semibold tracking-wide">
+<div class="flex items-center gap-8">
+<div class="relative group">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-zinc-400 text-lg">search</span>
+<input class="pl-10 pr-4 py-1.5 bg-zinc-100 dark:bg-zinc-900 border-none rounded-full w-64 focus:ring-2 focus:ring-indigo-500/20 transition-all text-xs font-medium" placeholder="Search system..." type="text"/>
+</div>
+<nav class="flex items-center gap-6">
+<a class="text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-600 pb-1" href="#">My Learning</a>
+<a class="text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all" href="#">Resources</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-full p-2 transition-all cursor-pointer">
+<span class="material-symbols-outlined text-zinc-600 dark:text-zinc-400" data-icon="notifications">notifications</span>
+</button>
+<div class="h-8 w-px bg-zinc-200 dark:bg-zinc-800 mx-2"></div>
+<div class="flex items-center gap-3 group cursor-pointer">
+<div class="text-right">
+<p class="text-xs font-bold text-on-surface leading-none">Admin User</p>
+<p class="text-[10px] text-zinc-500 font-medium">Sign Out</p>
+</div>
+<img alt="User Avatar" class="w-8 h-8 rounded-full border-2 border-white shadow-sm" data-alt="Professional headshot of a person with a friendly expression in a corporate setting with soft natural light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBz5RDc13JbdkOdysrxbjyeVgXaiqXKHM7bnbOfyZirLLsYIuGcq_jRCzVoM2qmiBgF98yfuHl7_i6t29T0a0nvSY_U0RjS2AzL6v69cCnAKIok-eJe3enoqMBdGwRZ2b531a0aF7qqA_8eSb1NrsaWgeMWC2_O-6dKzAm5QRGbCvR8C2VqQP0FFNKzk9zikSILBh8M8d-eHnezc32pqjOGInVoFxuZtdLg7UZvhB67lXb8PrEYAS294jcDZfruaRknOW4fqbh3Dgw"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-[224px] pt-24 px-10 pb-12 min-h-screen bg-surface-container-low">
+<!-- Welcome Header -->
+<header class="mb-12">
+<h1 class="text-4xl font-black tracking-tight text-on-surface mb-2">Welcome back, Admin.</h1>
+<p class="text-zinc-500 font-medium tracking-wide">Here's what's happening today across your learning ecosystem.</p>
+</header>
+<!-- Stats Grid (Bento Style) -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+<!-- Active Users Card -->
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10 flex items-center justify-between group hover:shadow-lg hover:shadow-indigo-500/5 transition-all">
+<div>
+<p class="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1">Active Users</p>
+<h3 class="text-3xl font-black text-on-surface">1,284</h3>
+<div class="flex items-center gap-1 mt-2 text-green-600 font-bold text-xs">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">trending_up</span>
+<span>+12.5%</span>
+</div>
+</div>
+<div class="w-14 h-14 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-3xl" data-icon="person">person</span>
+</div>
+</div>
+<!-- Published Courses Card -->
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10 flex items-center justify-between group hover:shadow-lg hover:shadow-indigo-500/5 transition-all">
+<div>
+<p class="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1">Published Courses</p>
+<h3 class="text-3xl font-black text-on-surface">42</h3>
+<div class="flex items-center gap-1 mt-2 text-indigo-600 font-bold text-xs">
+<span class="material-symbols-outlined text-sm">check_circle</span>
+<span>All systems live</span>
+</div>
+</div>
+<div class="w-14 h-14 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-3xl" data-icon="book">book</span>
+</div>
+</div>
+<!-- Total Courses Card -->
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm border border-outline-variant/10 flex items-center justify-between group hover:shadow-lg hover:shadow-indigo-500/5 transition-all">
+<div>
+<p class="text-xs font-bold text-zinc-400 uppercase tracking-widest mb-1">Total Courses</p>
+<h3 class="text-3xl font-black text-on-surface">58</h3>
+<div class="flex items-center gap-1 mt-2 text-zinc-400 font-bold text-xs">
+<span>16 In-draft</span>
+</div>
+</div>
+<div class="w-14 h-14 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-600 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-3xl" data-icon="library_books">library_books</span>
+</div>
+</div>
+</section>
+<!-- Secondary Content Section -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- Quick Links Grid -->
+<section class="lg:col-span-2">
+<div class="flex items-center justify-between mb-6">
+<h2 class="text-xl font-extrabold tracking-tight">Quick Management</h2>
+<span class="text-xs font-bold text-indigo-600 cursor-pointer">View Workspace</span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+<div class="bg-surface-container-lowest p-8 rounded-xl border-2 border-transparent hover:border-indigo-600 transition-all cursor-pointer group">
+<div class="w-10 h-10 bg-zinc-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+<span class="material-symbols-outlined">settings_suggest</span>
+</div>
+<h4 class="font-bold text-on-surface mb-1">System Overview</h4>
+<p class="text-xs text-zinc-500 leading-relaxed">Configure global instance settings.</p>
+</div>
+<div class="bg-surface-container-lowest p-8 rounded-xl border-2 border-transparent hover:border-indigo-600 transition-all cursor-pointer group">
+<div class="w-10 h-10 bg-zinc-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+<span class="material-symbols-outlined">manage_accounts</span>
+</div>
+<h4 class="font-bold text-on-surface mb-1">Manage Users</h4>
+<p class="text-xs text-zinc-500 leading-relaxed">Audit roles and permissions.</p>
+</div>
+<div class="bg-surface-container-lowest p-8 rounded-xl border-2 border-transparent hover:border-indigo-600 transition-all cursor-pointer group">
+<div class="w-10 h-10 bg-zinc-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+<span class="material-symbols-outlined">grade</span>
+</div>
+<h4 class="font-bold text-on-surface mb-1">Grade Book</h4>
+<p class="text-xs text-zinc-500 leading-relaxed">Assess student performance data.</p>
+</div>
+</div>
+<!-- Featured Graphic / Banner -->
+<div class="mt-8 rounded-2xl overflow-hidden relative h-48 group">
+<div class="absolute inset-0 bg-gradient-to-r from-indigo-900/90 to-transparent z-10 flex flex-col justify-center px-10">
+<span class="text-[10px] uppercase font-black text-indigo-300 tracking-[0.2em] mb-2">Platform Update</span>
+<h3 class="text-2xl font-black text-white mb-4">New Analytics Engine <br/>is Now Live</h3>
+<button class="bg-white text-indigo-900 px-6 py-2 rounded-lg text-xs font-bold w-fit hover:bg-indigo-50 transition-colors">Explore Reports</button>
+</div>
+<img alt="Data Analytics Visualization" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="Dynamic abstract visualization of data charts and digital graphs with neon blue and purple accents on a dark background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDKdUt8_ELA4jTjWQ8C1DZOTHqjM3R2_IFrPqNyeWD1ohxXG4bEw4anCe3T_RIvRusPeM3X1FLKoLjAoPAsg1nsTWnW4Wv2V0kR2ITMiy_QBIfpZYLB1EGapReDlA0k3ZgI9YNMsvaORUjtuAeBJ8kFztgyErhKTzMk1KdXcM1OQzGDvSeKB17dk9DOtd7BTQVnNcJetZFI6m1Y7Nj9SShFg-OdLKH3s9Nxk9v5k1gNbhYB2Ni75hANxGg9NLWk5mJRJjA7Dik740k"/>
+</div>
+</section>
+<!-- Recent Announcements Panel -->
+<section class="lg:col-span-1">
+<div class="bg-surface-container-lowest rounded-2xl p-6 shadow-sm border border-outline-variant/10 flex flex-col h-full">
+<div class="flex items-center justify-between mb-8">
+<h2 class="text-lg font-extrabold tracking-tight">Announcements</h2>
+<a class="text-xs font-bold text-indigo-600 hover:underline" href="#">View all</a>
+</div>
+<div class="space-y-6 flex-1">
+<div class="flex gap-4">
+<div class="min-w-[48px] h-[48px] rounded-xl bg-surface-container flex flex-col items-center justify-center">
+<span class="text-[10px] font-black uppercase text-zinc-400 leading-none">Oct</span>
+<span class="text-lg font-black text-on-surface leading-none">24</span>
+</div>
+<div>
+<h5 class="text-sm font-bold text-on-surface leading-tight mb-1">Q4 Curriculum Update</h5>
+<p class="text-xs text-zinc-500 line-clamp-2 leading-relaxed">The new technical modules for the winter semester have been uploaded...</p>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="min-w-[48px] h-[48px] rounded-xl bg-surface-container flex flex-col items-center justify-center">
+<span class="text-[10px] font-black uppercase text-zinc-400 leading-none">Oct</span>
+<span class="text-lg font-black text-on-surface leading-none">22</span>
+</div>
+<div>
+<h5 class="text-sm font-bold text-on-surface leading-tight mb-1">Server Maintenance</h5>
+<p class="text-xs text-zinc-500 line-clamp-2 leading-relaxed">Scheduled maintenance will occur this Sunday between 2AM and 4AM EST.</p>
+</div>
+</div>
+<div class="flex gap-4">
+<div class="min-w-[48px] h-[48px] rounded-xl bg-surface-container flex flex-col items-center justify-center">
+<span class="text-[10px] font-black uppercase text-zinc-400 leading-none">Oct</span>
+<span class="text-lg font-black text-on-surface leading-none">19</span>
+</div>
+<div>
+<h5 class="text-sm font-bold text-on-surface leading-tight mb-1">Security Audit Results</h5>
+<p class="text-xs text-zinc-500 line-clamp-2 leading-relaxed">The internal security audit for the LMS core has been successfully completed.</p>
+</div>
+</div>
+</div>
+<div class="mt-8 pt-6 border-t border-zinc-100">
+<button class="w-full flex items-center justify-center gap-2 py-3 bg-zinc-50 hover:bg-zinc-100 text-zinc-600 rounded-xl text-xs font-bold transition-all">
+<span class="material-symbols-outlined text-sm">add</span>
+                            Post New Announcement
+                        </button>
+</div>
+</div>
+</section>
+</div>
+<!-- Footer / Credits -->
+<footer class="mt-16 pt-8 border-t border-zinc-200/50 flex flex-col md:flex-row items-center justify-between gap-4">
+<p class="text-xs text-zinc-400 font-medium">© 2024 MetaLogics LMS Ecosystem. All rights reserved.</p>
+<div class="flex items-center gap-6">
+<a class="text-xs text-zinc-400 hover:text-indigo-600 transition-colors" href="#">Privacy Policy</a>
+<a class="text-xs text-zinc-400 hover:text-indigo-600 transition-colors" href="#">Compliance</a>
+<a class="text-xs text-zinc-400 hover:text-indigo-600 transition-colors" href="#">API Docs</a>
+</div>
+</footer>
+</main>
+</body></html>

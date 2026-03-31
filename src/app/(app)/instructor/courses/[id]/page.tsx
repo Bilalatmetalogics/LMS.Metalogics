@@ -24,7 +24,7 @@ export default function CourseEditorPage() {
       fetch(`/api/courses/${params.id}/assign`).then((r) => r.json()),
     ])
       .then(([c, users]) => {
-        setCourse(c);
+        setCourse({ ...c, modules: c.modules ?? [] });
         setAssigned(users.assigned || []);
         setUnassigned(users.unassigned || []);
         setLoading(false);

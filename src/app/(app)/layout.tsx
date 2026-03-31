@@ -27,13 +27,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   if (status === "unauthenticated" || !user) return null;
 
   return (
-    <div className="flex h-screen overflow-hidden bg-zinc-50">
+    <div className="flex min-h-screen bg-[#fbf8ff]">
       <Sidebar role={user.role} />
-      <div className="flex flex-col flex-1 overflow-hidden">
+      <div className="flex flex-col flex-1 min-w-0">
         <TopBar user={user} />
-        <main className="flex-1 overflow-y-auto p-6 md:pl-6 pl-14">
-          {children}
-        </main>
+        <main className="flex-1 px-8 py-8 md:pl-8 pl-16">{children}</main>
       </div>
     </div>
   );

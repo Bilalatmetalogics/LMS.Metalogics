@@ -9,7 +9,10 @@ cloudinary.config({
 });
 
 // GET /api/upload?folder=lms/videos&resource_type=video
-// Returns signed params for direct browser-to-Cloudinary upload
+// Returns signed params for direct browser-to-Cloudinary upload.
+//
+// IMPORTANT: resource_type must NOT be included in the signature params —
+// it is part of the upload URL path, not the signed string.
 export async function GET(req: NextRequest) {
   const session = await auth();
   const role = (session?.user as any)?.role;
@@ -28,8 +31,9 @@ export async function GET(req: NextRequest) {
 
   const timestamp = Math.round(Date.now() / 1000);
 
+  // Sign only folder + timestamp — resource_type is NOT part of the signed string
   const signature = cloudinary.utils.api_sign_request(
-    { timestamp, folder, resource_type: resourceType },
+    { timestamp, folder },
     process.env.CLOUDINARY_API_SECRET!,
   );
 

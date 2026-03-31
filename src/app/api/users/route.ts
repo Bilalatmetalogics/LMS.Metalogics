@@ -37,7 +37,13 @@ export async function POST(req: NextRequest) {
     role: role || "student",
   });
   return NextResponse.json(
-    { id: user._id, name: user.name, email: user.email, role: user.role },
+    {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      isActive: user.isActive,
+    },
     { status: 201 },
   );
 }

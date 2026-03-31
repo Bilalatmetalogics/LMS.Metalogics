@@ -4,11 +4,13 @@ import { connectDB } from "@/lib/db";
 import Assessment from "@/models/Assessment";
 import AssessmentResult from "@/models/AssessmentResult";
 import Notification from "@/models/Notification";
+import { emitNotification } from "@/lib/socket";
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
+  const { id } = await params;
   const session = await auth();
   if (!session)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -16,13 +18,11 @@ export async function POST(
   await connectDB();
 
   const { answers, courseId } = await req.json();
-  // answers: [{ questionId, answer }]
 
-  const assessment = (await Assessment.findById(params.id).lean()) as any;
+  const assessment = (await Assessment.findById(id).lean()) as any;
   if (!assessment)
     return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  // Auto-grade mcq and truefalse
   let autoCorrect = 0;
   let autoTotal = 0;
   const gradedAnswers = answers.map((a: any) => {
@@ -37,7 +37,7 @@ export async function POST(
       if (correct) autoCorrect++;
       return { ...a, isCorrect: correct };
     }
-    return { ...a, isCorrect: null }; // short answer — manual grading
+    return { ...a, isCorrect: null };
   });
 
   const hasShort = assessment.questions.some((q: any) => q.type === "short");
@@ -46,7 +46,7 @@ export async function POST(
 
   const result = await AssessmentResult.create({
     userId,
-    assessmentId: params.id,
+    assessmentId: id,
     courseId,
     answers: gradedAnswers,
     score,
@@ -55,12 +55,13 @@ export async function POST(
   });
 
   if (!hasShort) {
-    await Notification.create({
-      userId,
+    const notifPayload = {
       type: "grade",
       message: `Assessment graded: ${score}% — ${passed ? "Passed" : "Not passed"}`,
       link: `/courses/${courseId}`,
-    });
+    };
+    await Notification.create({ userId, ...notifPayload });
+    emitNotification(userId, notifPayload);
   }
 
   return NextResponse.json(result, { status: 201 });

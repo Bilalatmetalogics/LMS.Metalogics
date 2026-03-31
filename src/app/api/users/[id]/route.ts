@@ -6,8 +6,9 @@ import bcrypt from "bcryptjs";
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
+  const { id } = await params;
   const session = await auth();
   if ((session?.user as any)?.role !== "admin")
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -17,7 +18,7 @@ export async function PATCH(
     body.passwordHash = await bcrypt.hash(body.password, 12);
     delete body.password;
   }
-  const user = await User.findByIdAndUpdate(params.id, body, {
+  const user = await User.findByIdAndUpdate(id, body, {
     new: true,
     select: "-passwordHash",
   });
@@ -27,12 +28,13 @@ export async function PATCH(
 
 export async function DELETE(
   _: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
+  const { id } = await params;
   const session = await auth();
   if ((session?.user as any)?.role !== "admin")
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   await connectDB();
-  await User.findByIdAndUpdate(params.id, { isActive: false });
+  await User.findByIdAndUpdate(id, { isActive: false });
   return NextResponse.json({ success: true });
 }

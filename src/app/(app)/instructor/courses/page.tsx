@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/useAuth";
 import Link from "next/link";
+import { BookOpen } from "lucide-react";
 
 type Course = {
   _id: string;
@@ -10,6 +11,7 @@ type Course = {
   category: string;
   modules: any[];
   status: string;
+  createdBy?: { name: string; email: string };
 };
 
 export default function InstructorCoursesPage() {
@@ -30,11 +32,15 @@ export default function InstructorCoursesPage() {
   if (!user || !["admin", "instructor"].includes(user.role)) return null;
   if (loading) return null;
 
+  const isAdmin = user.role === "admin";
+
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-zinc-900">My Courses</h1>
+          <h1 className="text-xl font-semibold text-zinc-900">
+            {isAdmin ? "All Courses" : "My Courses"}
+          </h1>
           <p className="text-sm text-zinc-500 mt-0.5">
             {courses.length} course{courses.length !== 1 ? "s" : ""}
           </p>
@@ -49,6 +55,7 @@ export default function InstructorCoursesPage() {
 
       {courses.length === 0 ? (
         <div className="bg-white border border-zinc-200 rounded-xl py-16 text-center">
+          <BookOpen className="w-8 h-8 text-zinc-200 mx-auto mb-3" />
           <p className="text-sm text-zinc-400">
             No courses yet. Create your first one.
           </p>
@@ -64,6 +71,11 @@ export default function InstructorCoursesPage() {
                 <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500">
                   Category
                 </th>
+                {isAdmin && (
+                  <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500">
+                    Instructor
+                  </th>
+                )}
                 <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500">
                   Modules
                 </th>
@@ -82,6 +94,11 @@ export default function InstructorCoursesPage() {
                     {c.title}
                   </td>
                   <td className="px-4 py-3 text-zinc-500">{c.category}</td>
+                  {isAdmin && (
+                    <td className="px-4 py-3 text-xs text-zinc-500">
+                      {c.createdBy?.name || "—"}
+                    </td>
+                  )}
                   <td className="px-4 py-3 text-zinc-500">
                     {c.modules?.length || 0}
                   </td>
@@ -92,12 +109,24 @@ export default function InstructorCoursesPage() {
                       {c.status}
                     </span>
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-4 py-3 flex items-center gap-3">
+                    <Link
+                      href={`/courses/${c._id}`}
+                      className="text-xs text-zinc-500 hover:text-zinc-900"
+                    >
+                      View
+                    </Link>
                     <Link
                       href={`/instructor/courses/${c._id}`}
                       className="text-xs text-indigo-600 hover:underline"
                     >
                       Edit
+                    </Link>
+                    <Link
+                      href={`/instructor/grades?courseId=${c._id}`}
+                      className="text-xs text-zinc-500 hover:text-zinc-900"
+                    >
+                      Grades
                     </Link>
                   </td>
                 </tr>

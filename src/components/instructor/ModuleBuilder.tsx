@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { useParams } from "next/navigation";
+import Link from "next/link";
 import {
   ChevronRight,
   PlayCircle,
@@ -8,6 +10,7 @@ import {
   FileText,
   Youtube,
   Trash2,
+  ClipboardList,
 } from "lucide-react";
 
 type ContentType = "video" | "youtube" | "link" | "pdf";
@@ -44,7 +47,9 @@ const TYPE_LABELS: Record<ContentType, string> = {
 };
 
 export default function ModuleBuilder({ course }: { course: Course }) {
-  const [modules, setModules] = useState<Module[]>(course.modules);
+  const params = useParams<{ id: string }>();
+  const courseId = course._id || params?.id || "";
+  const [modules, setModules] = useState<Module[]>(course.modules ?? []);
   const [newModTitle, setNewModTitle] = useState("");
   const [expandedMod, setExpandedMod] = useState<string | null>(null);
 
@@ -82,7 +87,7 @@ export default function ModuleBuilder({ course }: { course: Course }) {
       {modules.map((mod) => (
         <div
           key={mod._id}
-          className="bg-white border border-zinc-200 rounded-xl overflow-hidden"
+          className="bg-white border border-zinc-200 rounded-xl overflow-hidden relative"
         >
           <button
             type="button"
@@ -99,10 +104,23 @@ export default function ModuleBuilder({ course }: { course: Course }) {
                 {mod.title}
               </span>
             </div>
-            <span className="text-xs text-zinc-400">
-              {mod.videos.length} item{mod.videos.length !== 1 ? "s" : ""}
-            </span>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-zinc-400">
+                {mod.videos.length} item{mod.videos.length !== 1 ? "s" : ""}
+              </span>
+            </div>
           </button>
+          {/* Assessment builder link — outside the toggle button */}
+          <div className="absolute right-12 top-2.5">
+            <Link
+              href={`/instructor/courses/${courseId}/assessment/${mod._id}`}
+              className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-800 px-2 py-1 rounded hover:bg-indigo-50 transition-colors"
+              title="Build assessment for this module"
+            >
+              <ClipboardList className="w-3.5 h-3.5" />
+              Assessment
+            </Link>
+          </div>
 
           {expandedMod === mod._id && (
             <div className="border-t border-zinc-100 px-4 py-3 space-y-3">

@@ -15,7 +15,7 @@ type Assessment = {
   questions: any[];
 };
 
-type Result = { score: number; passed: boolean };
+type Result = { score: number; passed: boolean; gradedAt?: string };
 
 export default function TakeAssessmentPage() {
   const params = useParams<{ id: string; assessmentId: string }>();
@@ -25,22 +25,32 @@ export default function TakeAssessmentPage() {
   const [loading, setLoading] = useState(true);
 
   async function load() {
-    const [aRes, cRes, gRes] = await Promise.all([
+    const [aRes, cRes, gradesRes] = await Promise.all([
       fetch(`/api/assessments/${params.assessmentId}`),
       fetch(`/api/courses/${params.id}`),
+      // Use student-accessible grades endpoint scoped to this course
       fetch(`/api/grades?courseId=${params.id}`),
     ]);
-    const a = await aRes.json();
-    const c = await cRes.json();
-    const grades = await gRes.json();
+
+    const a = aRes.ok ? await aRes.json() : null;
+    const c = cRes.ok ? await cRes.json() : {};
+    const grades = gradesRes.ok ? await gradesRes.json() : [];
+
     setAssessment(a);
     setCourseTitle(c.title || "");
+
+    // Find if student already submitted this specific assessment
     const existing = grades.find(
       (r: any) =>
         r.assessmentId?._id === params.assessmentId ||
         r.assessmentId === params.assessmentId,
     );
-    if (existing) setResult({ score: existing.score, passed: existing.passed });
+    if (existing)
+      setResult({
+        score: existing.score,
+        passed: existing.passed,
+        gradedAt: existing.gradedAt,
+      });
     setLoading(false);
   }
 
@@ -84,10 +94,15 @@ export default function TakeAssessmentPage() {
               {result.passed ? "Passed" : "Not passed"}
             </Badge>
           </div>
+          {!result.gradedAt && (
+            <p className="text-sm text-amber-600 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2">
+              Your short-answer responses are pending instructor review.
+            </p>
+          )}
           <p className="text-sm text-zinc-500">
             {result.passed
               ? "Great work — you cleared the passing threshold."
-              : `You needed ${assessment.passingScore}% to pass. Keep reviewing and try again.`}
+              : `You needed ${assessment.passingScore}% to pass.`}
           </p>
           <Link
             href={`/courses/${params.id}`}

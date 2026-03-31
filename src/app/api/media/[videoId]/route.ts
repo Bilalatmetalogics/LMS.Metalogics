@@ -11,20 +11,13 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Signed URL TTL in seconds (10 minutes)
-const SIGNED_URL_TTL = 600;
+const SIGNED_URL_TTL = 600; // 10 minutes
 
-/**
- * GET /api/media/[videoId]?courseId=xxx
- *
- * Verifies the authenticated user is assigned to the course,
- * then returns a short-lived signed Cloudinary URL for the asset.
- * Non-Cloudinary items (youtube, link) return the URL directly.
- */
 export async function GET(
   req: NextRequest,
-  { params }: { params: { videoId: string } },
+  { params }: { params: Promise<{ videoId: string }> },
 ) {
+  const { videoId } = await params;
   const session = await auth();
   if (!session)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -39,18 +32,15 @@ export async function GET(
   const userId = (session.user as any).id;
   const role = (session.user as any).role;
 
-  // Students must be assigned to the course
   if (role === "student") {
     const user = await User.findById(userId, "assignedCourses").lean();
     const assigned = (user as any)?.assignedCourses?.map((id: any) =>
       id.toString(),
     );
-    if (!assigned?.includes(courseId)) {
+    if (!assigned?.includes(courseId))
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
   }
 
-  // Find the content item across all modules
   const course = await Course.findById(courseId).lean();
   if (!course)
     return NextResponse.json({ error: "Course not found" }, { status: 404 });
@@ -58,7 +48,7 @@ export async function GET(
   let foundItem: any = null;
   for (const mod of (course as any).modules) {
     for (const v of mod.videos) {
-      if (v._id.toString() === params.videoId) {
+      if (v._id.toString() === videoId) {
         foundItem = v;
         break;
       }
@@ -69,7 +59,7 @@ export async function GET(
   if (!foundItem)
     return NextResponse.json({ error: "Item not found" }, { status: 404 });
 
-  // Non-Cloudinary content — return URL directly (no signing needed)
+  // Non-Cloudinary or non-signable types — return URL directly
   if (
     !foundItem.publicId ||
     foundItem.type === "youtube" ||
@@ -78,7 +68,6 @@ export async function GET(
     return NextResponse.json({ url: foundItem.url, signed: false });
   }
 
-  // Generate a signed Cloudinary URL
   const resourceType = foundItem.type === "pdf" ? "raw" : "video";
   const expiresAt = Math.round(Date.now() / 1000) + SIGNED_URL_TTL;
 
@@ -90,9 +79,5 @@ export async function GET(
     secure: true,
   });
 
-  return NextResponse.json({
-    url: signedUrl,
-    signed: true,
-    expiresAt,
-  });
+  return NextResponse.json({ url: signedUrl, signed: true, expiresAt });
 }

@@ -159,6 +159,7 @@ export default function UserTable({ users: initial }: { users: User[] }) {
                 </td>
                 <td className="px-4 py-3 text-right">
                   <button
+                    type="button"
                     onClick={() => toggleActive(u._id, u.isActive)}
                     className="text-xs text-zinc-500 hover:text-zinc-900 transition-colors"
                   >

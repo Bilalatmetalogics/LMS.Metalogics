@@ -93,11 +93,29 @@ export default function ContentViewer({
               onProgressSaved={onProgressSaved}
             />
           )}
-          {type === "youtube" && <YouTubeContent item={item} />}
-          {type === "link" && (
-            <LinkContent item={item} resolvedUrl={secureUrl} />
+          {type === "youtube" && (
+            <YouTubeContent
+              item={item}
+              courseId={courseId}
+              onProgressSaved={onProgressSaved}
+            />
           )}
-          {type === "pdf" && <PdfContent item={item} resolvedUrl={secureUrl} />}
+          {type === "link" && (
+            <LinkContent
+              item={item}
+              resolvedUrl={secureUrl}
+              courseId={courseId}
+              onProgressSaved={onProgressSaved}
+            />
+          )}
+          {type === "pdf" && (
+            <PdfContent
+              item={item}
+              resolvedUrl={secureUrl}
+              courseId={courseId}
+              onProgressSaved={onProgressSaved}
+            />
+          )}
         </>
       )}
     </div>
@@ -196,9 +214,46 @@ function VideoContent({
   );
 }
 
+// ── Auto-complete hook for non-video content ─────────────────────────────────
+// Links, PDFs, and YouTube are considered "completed" on first view since
+// there's no watch-time to track. This unblocks the next item in sequence.
+
+function useAutoComplete(
+  item: ContentItem,
+  courseId: string,
+  onProgressSaved?: () => void,
+) {
+  useEffect(() => {
+    if (item.type === "video") return; // video handles its own progress
+    // Mark as completed with a synthetic 100% progress entry
+    fetch("/api/progress", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        videoId: item._id,
+        courseId,
+        watchedSeconds: 1,
+        totalSeconds: 1,
+      }),
+    })
+      .then(() => onProgressSaved?.())
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [item._id, item.type, courseId]);
+}
+
 // ── YouTube embed ─────────────────────────────────────────────────────────────
 
-function YouTubeContent({ item }: { item: ContentItem }) {
+function YouTubeContent({
+  item,
+  courseId,
+  onProgressSaved,
+}: {
+  item: ContentItem;
+  courseId: string;
+  onProgressSaved?: () => void;
+}) {
+  useAutoComplete(item, courseId, onProgressSaved);
   const videoId = getYouTubeId(item.url);
 
   if (!videoId) {
@@ -235,10 +290,15 @@ function YouTubeContent({ item }: { item: ContentItem }) {
 function LinkContent({
   item,
   resolvedUrl,
+  courseId,
+  onProgressSaved,
 }: {
   item: ContentItem;
   resolvedUrl: string;
+  courseId: string;
+  onProgressSaved?: () => void;
 }) {
+  useAutoComplete(item, courseId, onProgressSaved);
   return (
     <div className="rounded-xl border border-zinc-200 p-6 space-y-4">
       <div className="flex items-center gap-3">
@@ -268,10 +328,15 @@ function LinkContent({
 function PdfContent({
   item,
   resolvedUrl,
+  courseId,
+  onProgressSaved,
 }: {
   item: ContentItem;
   resolvedUrl: string;
+  courseId: string;
+  onProgressSaved?: () => void;
 }) {
+  useAutoComplete(item, courseId, onProgressSaved);
   return (
     <div className="space-y-3">
       <div

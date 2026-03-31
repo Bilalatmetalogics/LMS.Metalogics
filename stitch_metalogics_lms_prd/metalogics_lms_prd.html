@@ -1,0 +1,270 @@
+# MetaLogics LMS — Design Brief for Stitch
+
+## Brand
+
+- Name: MetaLogics Trainings
+- Logo: available at `/public/METALOGICS-SVG-02.png` and `/public/METALOGICS-White.png`
+- Primary color: Indigo (#4F46E5)
+- Neutral base: Zinc grays
+- Font: System sans-serif (Inter recommended)
+
+---
+
+## App Shell (all authenticated pages)
+
+### Layout
+
+- Fixed left sidebar (width ~224px) + top bar + scrollable main content
+- Mobile: sidebar collapses to hamburger drawer
+
+### Sidebar
+
+- Top: MetaLogics logo + app name "MetaLogics Trainings"
+- Middle: nav links (icon + label), active state = indigo bg pill
+- Bottom: role tag (Admin / Instructor / Student) in muted uppercase
+
+Nav links by role:
+
+- Admin → Dashboard, Overview, Courses, Users
+- Instructor → Dashboard, My Courses, Grades
+- Student → Dashboard, My Courses
+
+### Top Bar
+
+- Right side only: notification bell (with unread count badge) + user avatar circle (initials) + name + Sign out button
+
+---
+
+## Pages to Design
+
+---
+
+### 1. Login `/login`
+
+**Layout:** Centered card on light gray background
+
+**Elements:**
+
+- MetaLogics logo (image) centered at top
+- Heading: "Internal Training"
+- Subtext: "Sign in to your account"
+- Email input
+- Password input
+- "Sign in" primary button (full width, indigo)
+- Error state: red inline alert above inputs
+- Demo accounts panel below card (3 rows: Admin / Instructor / Student — click to autofill)
+
+---
+
+### 2. Dashboard `/dashboard`
+
+Three variants — same page, different content per role.
+
+#### Admin Dashboard
+
+- Welcome heading + subtext "Here's what's happening today."
+- Stat cards row (3 cards): Active Users · Published Courses · Total Courses
+  - Each card: icon in indigo rounded square + label + large number
+- Quick links grid (3 cards): System Overview · Manage Users · Grade Book
+  - Each: title + description, hover = indigo border
+- Recent Announcements panel (list, "View all" link)
+
+#### Instructor Dashboard
+
+- Welcome heading
+- Stat cards row (2 cards): My Courses · Enrolled Staff
+- My Courses list panel (up to 5 rows): course title + module count + status + "Edit →" link
+- Recent Announcements panel
+
+#### Student Dashboard
+
+- Welcome heading
+- Stat cards row (2 cards): Assigned Courses · Pending Assessments
+- My Progress panel: list of courses each with a progress bar (% complete, x/y done)
+- Pending Assessments panel: list with "Start →" link per assessment
+- Recent Announcements panel
+
+---
+
+### 3. Courses List `/courses`
+
+#### Staff view (Admin / Instructor)
+
+- Page heading "Courses" + course count subtext
+- "New course" button top-right (indigo)
+- Table: Title · Category · Created By (admin only) · Status badge · Actions (View / Edit)
+- Status badge: green pill = published, gray pill = draft
+
+#### Student view
+
+- Page heading "My Courses"
+- Card grid (3 columns desktop, 2 tablet, 1 mobile)
+- Each card: gray thumbnail area (placeholder or course image) + title + description (2-line clamp) + category pill
+- Hover: indigo border + subtle shadow
+
+---
+
+### 4. Course Detail `/courses/[id]`
+
+- Breadcrumb: Courses > Course Title
+- Course header card: title + description + category badge + progress bar (x/y items completed) + "Start course" / "Continue learning" button (indigo)
+- Module list below (one card per module):
+  - Module header: title + "x/y done" count
+  - Content rows: icon (play/youtube/link/pdf/checkmark) + title + duration
+  - Assessment row at bottom of module: lock icon if locked, clipboard icon if unlocked + "Take assessment →" link
+  - Locked assessment shows "Complete all content first" in muted text
+
+---
+
+### 5. Learn Player `/courses/[id]/learn`
+
+**Full-height split layout (no outer padding)**
+
+- Left panel (~280px, scrollable): course sidebar
+  - Course title at top
+  - Modules collapsible, content items listed
+  - Active item highlighted (indigo)
+  - Completed items show green checkmark
+  - Locked items show lock icon + muted text
+- Right panel (flex-1): content viewer
+  - Video: native HTML5 player or YouTube embed (full width)
+  - PDF: iframe embed
+  - Link: description + "Open link" button
+  - Below content: item title + description
+  - Progress indicator: "75% watched to unlock next"
+
+---
+
+### 6. Assessment `/courses/[id]/assessment/[assessmentId]`
+
+- Breadcrumb: Courses > Course Title > Assessment Title
+- Assessment header: title + description + passing score note
+- Question cards (one per question, stacked):
+  - Question number + text
+  - MCQ: radio button options
+  - True/False: two radio options
+  - Short Answer: textarea
+- "Submit assessment" button at bottom (indigo, full width or right-aligned)
+- Results state (after submit): score % large + Pass/Fail badge + per-question breakdown (correct/incorrect indicators)
+
+---
+
+### 7. Instructor: Course Editor `/instructor/courses/[id]`
+
+- Breadcrumb: My Courses > Course Title
+- Page heading "Edit Course" + "View grade book →" link top-right
+- Sections stacked vertically (each with a small section heading):
+
+  **Course Details**
+  - Title input, Description textarea, Category select, Status toggle (Draft / Published)
+  - Save button
+
+  **Modules & Content**
+  - List of modules (drag handle, module title, expand/collapse)
+  - Inside each module: content items list (title, type icon, reorder, delete)
+  - Add content button per module (opens inline form: title, URL/upload, type select)
+  - Add module button at bottom
+  - Assessment link per module: "Build assessment →"
+
+  **Assign Staff**
+  - Two columns: Assigned (with remove button) · Available (with add button)
+  - Search/filter input
+
+  **Post Announcement**
+  - Textarea + "Post announcement" button
+
+---
+
+### 8. Instructor: New Course `/instructor/courses/new`
+
+- Centered form card
+- Fields: Title, Description, Category (select), Status (Draft/Published)
+- "Create course" primary button
+
+---
+
+### 9. Assessment Builder `/instructor/courses/[id]/assessment/[moduleId]`
+
+- Breadcrumb: My Courses > Course > Assessment Builder
+- Assessment title input + passing score input
+- Question list (stacked cards):
+  - Question text input
+  - Type select (MCQ / True-False / Short Answer)
+  - MCQ: option inputs + "correct" radio selector
+  - True/False: correct answer toggle
+  - Short Answer: no extra config
+  - Delete question button
+- "Add question" button
+- "Save assessment" button (indigo)
+
+---
+
+### 10. Instructor: Grades `/instructor/grades`
+
+- Page heading "Grade Book"
+- Course selector dropdown at top
+- Table (shown after course selected): Staff name + email · Assessment title · Score % · Pass/Fail badge · Submitted date
+- Empty state when no course selected or no submissions
+
+---
+
+### 11. Admin: System Overview `/admin/overview`
+
+- Page heading "System Overview" + "New course" button top-right
+- Stat cards row (4): Total Courses · Published · Total Enrollments · Content Items
+- All Courses table: Course + category · Instructor · Status badge · Enrolled count · Content count · Actions (View / Edit / Grades)
+- Recent Assessment Submissions table: Staff · Assessment · Score · Pass/Fail · Date
+
+---
+
+### 12. Admin: Users `/admin/users`
+
+- Page heading "Users" + subtext "Manage staff accounts"
+- User table: Name + email · Role badge · Active status toggle · Actions (Edit / Deactivate)
+- "Add user" button top-right
+- Add/Edit user: modal or inline form — Name, Email, Password, Role select, Active toggle
+
+---
+
+### 13. Notifications `/notifications`
+
+- Page heading "Notifications" + "Mark all read" button (shown if unread exist)
+- List of notifications:
+  - Unread: light indigo background row + indigo dot
+  - Read: white row + gray dot
+  - Each row: message text + timestamp + optional "View" link
+- Empty state: bell icon + "You're all caught up."
+
+---
+
+## Component Reference
+
+| Component       | Description                                                          |
+| --------------- | -------------------------------------------------------------------- |
+| Stat card       | White card, indigo icon square, label + large number                 |
+| Progress bar    | Indigo fill, optional % label right                                  |
+| Badge           | Pill: green=published/passed, gray=draft, red=failed, yellow=pending |
+| Breadcrumbs     | Slash-separated, last item non-linked                                |
+| Skeleton        | Gray animated pulse placeholder                                      |
+| Table row hover | `bg-zinc-50` on hover                                                |
+| Primary button  | Indigo bg, white text, rounded-lg                                    |
+| Input           | Border zinc-200, focus ring indigo                                   |
+
+---
+
+## Color Tokens
+
+| Token          | Value                                    |
+| -------------- | ---------------------------------------- |
+| Primary        | #4F46E5 (indigo-600)                     |
+| Primary hover  | #4338CA (indigo-700)                     |
+| Primary light  | #EEF2FF (indigo-50)                      |
+| Surface        | #FFFFFF                                  |
+| Background     | #F9FAFB (zinc-50)                        |
+| Border         | #E4E4E7 (zinc-200)                       |
+| Text primary   | #18181B (zinc-900)                       |
+| Text secondary | #71717A (zinc-500)                       |
+| Text muted     | #A1A1AA (zinc-400)                       |
+| Success        | #15803D (green-700) / #F0FDF4 (green-50) |
+| Danger         | #DC2626 (red-600) / #FEF2F2 (red-50)     |
+| Warning        | #D97706 (amber-600) / #FFFBEB (amber-50) |

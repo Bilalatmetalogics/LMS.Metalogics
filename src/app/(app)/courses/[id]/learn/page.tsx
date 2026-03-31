@@ -48,7 +48,7 @@ export default function LearnPage() {
       fetch(`/api/progress?courseId=${params.id}`).then((r) => r.json()),
     ])
       .then(([c, p]) => {
-        setCourse(c);
+        setCourse({ ...c, modules: c.modules ?? [] });
         setProgressList(p);
         setLoading(false);
       })
@@ -57,7 +57,7 @@ export default function LearnPage() {
 
   if (loading || !course) return null;
 
-  const allItems = course.modules.flatMap((m) => m.videos);
+  const allItems = (course.modules ?? []).flatMap((m) => m.videos ?? []);
   const progressMap: Record<string, Progress> = {};
   progressList.forEach((p) => {
     progressMap[p.videoId] = p;

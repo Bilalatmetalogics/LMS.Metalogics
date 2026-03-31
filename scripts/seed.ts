@@ -3,7 +3,6 @@ import bcrypt from "bcryptjs";
 import { config } from "dotenv";
 import { resolve } from "path";
 
-// Load .env.local so the seed uses the same DB as the app
 config({ path: resolve(process.cwd(), ".env.local") });
 
 const MONGODB_URI = process.env.MONGODB_URI;
@@ -24,7 +23,7 @@ const UserSchema = new mongoose.Schema(
 const User = mongoose.models.User || mongoose.model("User", UserSchema);
 
 async function seed() {
-  await mongoose.connect(MONGODB_URI);
+  await mongoose.connect(MONGODB_URI as string);
   console.log("Connected to MongoDB");
 
   const users = [

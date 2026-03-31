@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/db";
 import Announcement from "@/models/Announcement";
 import Notification from "@/models/Notification";
 import User from "@/models/User";
+import { emitNotificationToMany } from "@/lib/socket";
 
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -55,6 +56,13 @@ export async function POST(req: NextRequest) {
       link: courseId ? `/courses/${courseId}` : "/dashboard",
     })),
   );
+
+  // Push real-time event to all affected users
+  emitNotificationToMany(userIds, {
+    type: "announcement",
+    message: `New announcement: ${title}`,
+    link: courseId ? `/courses/${courseId}` : "/dashboard",
+  });
 
   return NextResponse.json(announcement, { status: 201 });
 }

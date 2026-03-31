@@ -3,7 +3,9 @@ import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import UserProgress from "@/models/UserProgress";
 import Course from "@/models/Course";
+import User from "@/models/User";
 import Notification from "@/models/Notification";
+import { emitNotification } from "@/lib/socket";
 
 const UNLOCK_THRESHOLD = 0.75;
 
@@ -14,8 +16,19 @@ export async function PATCH(req: NextRequest) {
 
   const { videoId, courseId, watchedSeconds, totalSeconds } = await req.json();
   const userId = (session.user as any).id;
+  const role = (session.user as any).role;
 
   await connectDB();
+
+  // Students must be enrolled in the course
+  if (role === "student") {
+    const user = await User.findById(userId, "assignedCourses").lean();
+    const enrolled = (user as any)?.assignedCourses?.map((id: any) =>
+      id.toString(),
+    );
+    if (!enrolled?.includes(courseId))
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
 
   const ratio = totalSeconds > 0 ? watchedSeconds / totalSeconds : 0;
   const completed = ratio >= UNLOCK_THRESHOLD;
@@ -60,12 +73,13 @@ export async function PATCH(req: NextRequest) {
         }
       }
       if (found) {
-        await Notification.create({
-          userId,
+        const notifPayload = {
           type: "unlock",
           message: `Next video unlocked: "${nextVideoTitle}"`,
           link: `/courses/${courseId}/learn`,
-        });
+        };
+        await Notification.create({ userId, ...notifPayload });
+        emitNotification(userId, notifPayload);
       }
     }
   }

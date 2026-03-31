@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { CheckCircle2 } from "lucide-react";
 
 type Course = {
   _id: string;
@@ -17,15 +18,17 @@ export default function CourseForm({ course }: { course?: Course }) {
     title: course?.title || "",
     description: course?.description || "",
     category: course?.category || "",
-    status: course?.status || "draft",
+    status: (course?.status || "draft") as "draft" | "published",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [saved, setSaved] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setSaved(false);
 
     const res = course
       ? await fetch(`/api/courses/${course._id}`, {
@@ -41,12 +44,21 @@ export default function CourseForm({ course }: { course?: Course }) {
 
     if (res.ok) {
       const data = await res.json();
-      router.push(`/instructor/courses/${data._id}`);
-      router.refresh();
+      if (!course) {
+        // New course — navigate to editor
+        const id = data._id || data.id;
+        router.push(`/instructor/courses/${id}`);
+      } else {
+        // Existing course — stay on page, show confirmation
+        setSaved(true);
+        setTimeout(() => setSaved(false), 3000);
+        router.refresh();
+      }
     } else {
-      setError("Failed to save course");
-      setLoading(false);
+      const body = await res.json().catch(() => ({}));
+      setError(body.error || "Failed to save course");
     }
+    setLoading(false);
   }
 
   return (
@@ -54,6 +66,12 @@ export default function CourseForm({ course }: { course?: Course }) {
       onSubmit={handleSubmit}
       className="bg-white border border-zinc-200 rounded-xl p-6 space-y-4"
     >
+      {saved && (
+        <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 border border-green-100 rounded-lg px-3 py-2">
+          <CheckCircle2 className="w-4 h-4 shrink-0" />
+          Course saved.
+        </div>
+      )}
       {error && (
         <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
           {error}
@@ -126,7 +144,10 @@ export default function CourseForm({ course }: { course?: Course }) {
             id="course-status"
             value={form.status}
             onChange={(e) =>
-              setForm((p) => ({ ...p, status: e.target.value as any }))
+              setForm((p) => ({
+                ...p,
+                status: e.target.value as "draft" | "published",
+              }))
             }
             className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
           >
