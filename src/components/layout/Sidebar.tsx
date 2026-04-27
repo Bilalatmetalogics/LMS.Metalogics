@@ -9,26 +9,20 @@ type NavItem = { label: string; href: string; icon: string };
 
 const navByRole: Record<string, NavItem[]> = {
   admin: [
-    { label: "Dashboard", href: "/dashboard", icon: "dashboard" },
-    { label: "Overview", href: "/admin/overview", icon: "analytics" },
-    { label: "Courses", href: "/instructor/courses", icon: "school" },
+    { label: "Dashboard", href: "/dashboard", icon: "home" },
+    { label: "Overview", href: "/admin/overview", icon: "bar_chart" },
+    { label: "Courses", href: "/instructor/courses", icon: "play_circle" },
     { label: "Users", href: "/admin/users", icon: "group" },
   ],
   instructor: [
-    { label: "Dashboard", href: "/dashboard", icon: "dashboard" },
-    { label: "My Courses", href: "/instructor/courses", icon: "school" },
+    { label: "Dashboard", href: "/dashboard", icon: "home" },
+    { label: "My Courses", href: "/instructor/courses", icon: "play_circle" },
     { label: "Grades", href: "/instructor/grades", icon: "grade" },
   ],
   student: [
-    { label: "Dashboard", href: "/dashboard", icon: "dashboard" },
-    { label: "My Courses", href: "/courses", icon: "auto_stories" },
+    { label: "Home", href: "/dashboard", icon: "home" },
+    { label: "My Courses", href: "/courses", icon: "play_circle" },
   ],
-};
-
-const roleLabel: Record<string, string> = {
-  admin: "Admin Console",
-  instructor: "Instructor",
-  student: "Student",
 };
 
 function NavLinks({
@@ -41,7 +35,7 @@ function NavLinks({
   onNav?: () => void;
 }) {
   return (
-    <nav className="flex-1 flex flex-col gap-1">
+    <nav className="flex-1 space-y-0.5 px-3">
       {nav.map((item) => {
         const active =
           pathname === item.href || pathname.startsWith(item.href + "/");
@@ -51,13 +45,18 @@ function NavLinks({
             href={item.href}
             onClick={onNav}
             className={cn(
-              "flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium transition-all active:scale-[0.98]",
+              "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all",
               active
-                ? "bg-[#4f46e5] text-white shadow-sm shadow-indigo-200"
-                : "text-zinc-600 hover:bg-zinc-200/50",
+                ? "bg-indigo-600 text-white font-semibold"
+                : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 font-medium",
             )}
           >
-            <span className="material-symbols-outlined text-[20px]">
+            <span
+              className={cn(
+                "material-symbols-outlined text-[20px]",
+                active ? "text-white" : "text-zinc-400",
+              )}
+            >
               {item.icon}
             </span>
             {item.label}
@@ -73,47 +72,34 @@ export default function Sidebar({ role }: { role: string }) {
   const nav = navByRole[role] || navByRole.student;
   const [open, setOpen] = useState(false);
 
-  const logoBlock = (
-    <div className="mb-8 px-2 flex items-center gap-3">
-      <div className="w-10 h-10 rounded-lg bg-[#4f46e5] flex items-center justify-center text-white shrink-0 overflow-hidden">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/METALOGICS-White.png"
-          alt="MetaLogics"
-          className="w-8 h-8 object-contain"
-          onError={(e) => {
-            (e.target as HTMLImageElement).style.display = "none";
-          }}
-        />
-      </div>
-      <div>
-        <h1 className="text-[15px] font-black tracking-tight text-[#3525cd] leading-tight">
-          MetaLogics
-        </h1>
-        <span className="text-[10px] uppercase tracking-widest font-bold text-zinc-400">
-          {roleLabel[role] || role}
-        </span>
-      </div>
+  const logo = (
+    <div className="px-4 py-5 flex items-center gap-2.5">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/METALOGICS-SVG-02.png"
+        alt="MetaLogics"
+        className="h-7 w-auto object-contain"
+        onError={(e) => {
+          (e.target as HTMLImageElement).style.display = "none";
+        }}
+      />
     </div>
   );
 
-  const bottomLinks = (
-    <div className="mt-auto flex flex-col gap-1 pt-4 border-t border-zinc-200/50">
-      {[
-        { label: "Settings", icon: "settings", href: "#" },
-        { label: "Help", icon: "help", href: "#" },
-      ].map((item) => (
-        <Link
-          key={item.label}
-          href={item.href}
-          className="flex items-center gap-3 px-4 py-2 text-zinc-500 hover:bg-zinc-200/50 rounded-lg text-sm font-medium transition-colors"
-        >
-          <span className="material-symbols-outlined text-[20px]">
-            {item.icon}
-          </span>
-          {item.label}
-        </Link>
-      ))}
+  const bottom = (
+    <div className="px-3 pb-4 space-y-0.5 border-t border-zinc-100 pt-3">
+      <Link
+        href="#"
+        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors"
+      >
+        <span className="material-symbols-outlined text-[20px]">settings</span>
+        Settings
+      </Link>
+      <div className="px-3 pt-2">
+        <p className="text-[10px] font-semibold text-zinc-300 uppercase tracking-widest">
+          {role}
+        </p>
+      </div>
     </div>
   );
 
@@ -131,10 +117,9 @@ export default function Sidebar({ role }: { role: string }) {
         </span>
       </button>
 
-      {/* Mobile overlay */}
       {open && (
         <div
-          className="md:hidden fixed inset-0 z-40 bg-black/30"
+          className="md:hidden fixed inset-0 z-40 bg-black/20"
           onClick={() => setOpen(false)}
         />
       )}
@@ -142,32 +127,31 @@ export default function Sidebar({ role }: { role: string }) {
       {/* Mobile drawer */}
       <aside
         className={cn(
-          "md:hidden fixed inset-y-0 left-0 z-50 w-[224px] bg-zinc-50 flex flex-col p-4 gap-2 transition-transform duration-200",
+          "md:hidden fixed inset-y-0 left-0 z-50 w-56 bg-white border-r border-zinc-100 flex flex-col transition-transform duration-200",
           open ? "translate-x-0" : "-translate-x-full",
         )}
       >
-        <div className="flex items-center justify-between mb-0">
-          {logoBlock}
+        <div className="flex items-center justify-between pr-3">
+          {logo}
           <button
             type="button"
             onClick={() => setOpen(false)}
-            className="p-1 rounded-lg hover:bg-zinc-100 mb-8"
-            aria-label="Close menu"
+            className="p-1.5 rounded-lg hover:bg-zinc-100"
           >
-            <span className="material-symbols-outlined text-zinc-500 text-[20px]">
+            <span className="material-symbols-outlined text-zinc-400 text-[20px]">
               close
             </span>
           </button>
         </div>
         <NavLinks nav={nav} pathname={pathname} onNav={() => setOpen(false)} />
-        {bottomLinks}
+        {bottom}
       </aside>
 
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex w-[224px] shrink-0 bg-zinc-50 flex-col p-4 gap-2 h-screen sticky top-0">
-        {logoBlock}
+      <aside className="hidden md:flex w-56 shrink-0 bg-white border-r border-zinc-100 flex-col h-screen sticky top-0">
+        {logo}
         <NavLinks nav={nav} pathname={pathname} />
-        {bottomLinks}
+        {bottom}
       </aside>
     </>
   );

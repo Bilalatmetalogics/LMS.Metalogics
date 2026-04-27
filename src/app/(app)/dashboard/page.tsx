@@ -3,93 +3,9 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/useAuth";
 import Link from "next/link";
-import { ProgressBar } from "@/components/ui/progress-bar";
+import CourseCard from "@/components/ui/CourseCard";
 
-/* ── Shared stat card ─────────────────────────────────────────── */
-function StatCard({
-  label,
-  value,
-  icon,
-  accent = "primary",
-  sub,
-}: {
-  label: string;
-  value: number | string;
-  icon: string;
-  accent?: "primary" | "tertiary";
-  sub?: string;
-}) {
-  const isTertiary = accent === "tertiary";
-  return (
-    <div className="bg-white p-6 rounded-xl relative overflow-hidden group border border-[#c7c4d8]/10 shadow-sm">
-      <div
-        className={`absolute -right-4 -top-4 w-24 h-24 rounded-full group-hover:scale-125 transition-transform duration-500 ${isTertiary ? "bg-[#7e3000]/5" : "bg-[#3525cd]/5"}`}
-      />
-      <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1">
-        {label}
-      </p>
-      <div className="flex items-end justify-between">
-        <h3
-          className={`text-5xl font-black tracking-tighter ${isTertiary ? "text-[#7e3000]" : "text-[#3525cd]"}`}
-        >
-          {value}
-        </h3>
-        <span
-          className={`material-symbols-outlined opacity-20 text-[48px] ${isTertiary ? "text-[#7e3000]" : "text-[#3525cd]"}`}
-        >
-          {icon}
-        </span>
-      </div>
-      {sub && (
-        <p
-          className={`text-[11px] font-bold mt-2 ${isTertiary ? "text-[#7e3000]" : "text-[#3525cd]"}`}
-        >
-          {sub}
-        </p>
-      )}
-    </div>
-  );
-}
-
-/* ── Announcements panel (shared) ─────────────────────────────── */
-function AnnouncementsPanel({ items }: { items: any[] }) {
-  return (
-    <div className="bg-[#f4f2fd] p-6 rounded-xl flex-1 border border-[#c7c4d8]/10">
-      <div className="flex items-center justify-between mb-6">
-        <h4 className="font-bold text-[#1a1b22]">Announcements</h4>
-        <Link
-          href="/notifications"
-          className="text-[10px] font-black text-[#3525cd] uppercase tracking-widest hover:underline"
-        >
-          View All
-        </Link>
-      </div>
-      {items.length === 0 ? (
-        <p className="text-xs text-zinc-400 text-center py-6">
-          No announcements yet.
-        </p>
-      ) : (
-        <div className="space-y-5">
-          {items.map((a: any) => (
-            <div
-              key={a._id}
-              className="relative pl-5 before:absolute before:left-0 before:top-1 before:bottom-1 before:w-[2px] before:bg-[#4f46e5]"
-            >
-              <p className="text-[10px] text-zinc-400 mb-0.5">
-                {new Date(a.createdAt).toLocaleDateString()}
-              </p>
-              <h5 className="text-sm font-bold leading-snug text-[#1a1b22]">
-                {a.message}
-              </h5>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-/* ── Quick link card ──────────────────────────────────────────── */
+/* ─── Admin quick-link card ─────────────────────────────────── */
 function QuickCard({
   label,
   desc,
@@ -104,18 +20,95 @@ function QuickCard({
   return (
     <Link
       href={href}
-      className="group bg-white p-6 rounded-xl border-2 border-transparent hover:border-[#3525cd] transition-all cursor-pointer"
+      className="group bg-white p-5 rounded-xl border border-zinc-100 hover:border-indigo-300 hover:shadow-md transition-all"
     >
-      <div className="w-10 h-10 bg-zinc-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-[#3525cd] group-hover:text-white transition-colors text-zinc-600">
-        <span className="material-symbols-outlined text-[20px]">{icon}</span>
+      <div className="w-9 h-9 bg-indigo-50 rounded-lg flex items-center justify-center mb-3 group-hover:bg-indigo-600 group-hover:text-white transition-colors text-indigo-600">
+        <span className="material-symbols-outlined text-[18px]">{icon}</span>
       </div>
-      <h4 className="font-bold text-[#1a1b22] mb-1 text-sm">{label}</h4>
-      <p className="text-xs text-zinc-500 leading-relaxed">{desc}</p>
+      <p className="text-sm font-semibold text-zinc-900">{label}</p>
+      <p className="text-xs text-zinc-400 mt-0.5 leading-relaxed">{desc}</p>
     </Link>
   );
 }
 
-/* ── Main page ────────────────────────────────────────────────── */
+/* ─── Stat pill (admin/instructor) ──────────────────────────── */
+function StatPill({ label, value }: { label: string; value: number | string }) {
+  return (
+    <div className="flex flex-col">
+      <span className="text-3xl font-black text-zinc-900 tracking-tight">
+        {value}
+      </span>
+      <span className="text-xs text-zinc-400 mt-0.5">{label}</span>
+    </div>
+  );
+}
+
+/* ─── Announcements ──────────────────────────────────────────── */
+function Announcements({ items }: { items: any[] }) {
+  return (
+    <div className="bg-white rounded-xl border border-zinc-100 overflow-hidden">
+      <div className="px-5 py-4 border-b border-zinc-50 flex items-center justify-between">
+        <p className="text-sm font-semibold text-zinc-900">Announcements</p>
+        <Link
+          href="/notifications"
+          className="text-xs text-indigo-600 hover:underline"
+        >
+          View all
+        </Link>
+      </div>
+      {items.length === 0 ? (
+        <p className="px-5 py-8 text-xs text-zinc-400 text-center">
+          Nothing new.
+        </p>
+      ) : (
+        <ul className="divide-y divide-zinc-50">
+          {items.map((a: any) => (
+            <li key={a._id} className="px-5 py-3.5">
+              <p className="text-sm text-zinc-800 leading-snug">{a.message}</p>
+              <p className="text-[11px] text-zinc-400 mt-1">
+                {new Date(a.createdAt).toLocaleDateString()}
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/* ─── Horizontal scroll row (Netflix style) ─────────────────── */
+function CourseRow({
+  title,
+  courses,
+  progressMap,
+}: {
+  title: string;
+  courses: any[];
+  progressMap: Record<string, number>;
+}) {
+  if (!courses.length) return null;
+  return (
+    <section>
+      <h2 className="text-base font-semibold text-zinc-900 mb-3">{title}</h2>
+      <div className="flex gap-4 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
+        {courses.map((c: any) => (
+          <div key={c._id} className="w-64 shrink-0">
+            <CourseCard
+              id={c._id}
+              title={c.title}
+              description={c.description}
+              category={c.category}
+              pct={progressMap[c._id]}
+              href={`/courses/${c._id}`}
+            />
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ─── Main ───────────────────────────────────────────────────── */
 export default function DashboardPage() {
   const { user } = useAuth();
   const [data, setData] = useState<any>(null);
@@ -131,7 +124,7 @@ export default function DashboardPage() {
       const courses = coursesRes.ok ? await coursesRes.json() : [];
       const notifs = notifRes.ok ? await notifRes.json() : [];
       setAnnouncements(
-        notifs.filter((n: any) => n.type === "announcement").slice(0, 3),
+        notifs.filter((n: any) => n.type === "announcement").slice(0, 4),
       );
 
       if (user!.role === "admin") {
@@ -156,6 +149,7 @@ export default function DashboardPage() {
         }
         setData({ myCourses: courses, enrolledCount });
       } else {
+        // Student
         const progressRes = await Promise.all(
           courses.map((c: any) =>
             fetch(`/api/progress?courseId=${c._id}`).then((r) =>
@@ -163,20 +157,17 @@ export default function DashboardPage() {
             ),
           ),
         );
-        const courseProgress = courses.map((course: any, i: number) => {
-          const allVideos = course.modules?.flatMap((m: any) => m.videos) || [];
+        const progressMap: Record<string, number> = {};
+        courses.forEach((c: any, i: number) => {
+          const allVideos = c.modules?.flatMap((m: any) => m.videos) || [];
           const completed = progressRes[i].filter(
             (p: any) => p.completed,
           ).length;
-          return {
-            course,
-            completed,
-            total: allVideos.length,
-            pct: allVideos.length
-              ? Math.round((completed / allVideos.length) * 100)
-              : 0,
-          };
+          progressMap[c._id] = allVideos.length
+            ? Math.round((completed / allVideos.length) * 100)
+            : 0;
         });
+
         const [assessmentsRes, gradesRes] = await Promise.all([
           fetch("/api/assessments"),
           fetch("/api/grades"),
@@ -185,15 +176,15 @@ export default function DashboardPage() {
           ? await assessmentsRes.json()
           : [];
         const grades = gradesRes.ok ? await gradesRes.json() : [];
-        const enrolledCourseIds = new Set(courses.map((c: any) => c._id));
+        const enrolledIds = new Set(courses.map((c: any) => c._id));
         const gradedIds = new Set(
           grades.map((r: any) => r.assessmentId?._id || r.assessmentId),
         );
         const pending = assessments.filter(
-          (a: any) =>
-            enrolledCourseIds.has(a.courseId) && !gradedIds.has(a._id),
+          (a: any) => enrolledIds.has(a.courseId) && !gradedIds.has(a._id),
         );
-        setData({ courseProgress, pending });
+
+        setData({ courses, progressMap, pending });
       }
     }
     load();
@@ -206,71 +197,56 @@ export default function DashboardPage() {
   /* ── ADMIN ── */
   if (user.role === "admin") {
     return (
-      <div className="max-w-5xl mx-auto space-y-10">
-        <header>
-          <h1 className="text-4xl font-black tracking-tight text-[#1a1b22] mb-1">
+      <div className="max-w-5xl mx-auto space-y-8">
+        {/* Hero */}
+        <div className="rounded-2xl bg-gradient-to-br from-indigo-600 to-violet-700 p-8 text-white relative overflow-hidden">
+          <div className="absolute -top-8 -right-8 w-48 h-48 bg-white/5 rounded-full" />
+          <div className="absolute -bottom-12 -left-6 w-40 h-40 bg-black/10 rounded-full" />
+          <p className="text-indigo-200 text-xs font-semibold uppercase tracking-widest mb-1">
+            Admin Console
+          </p>
+          <h1 className="text-3xl font-black tracking-tight mb-1">
             Welcome back, {firstName}.
           </h1>
-          <p className="text-zinc-500 font-medium">
-            Here&apos;s what&apos;s happening today across your learning
-            ecosystem.
+          <p className="text-indigo-200 text-sm">
+            Here's your platform at a glance.
           </p>
-        </header>
-
-        {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <StatCard
-            label="Active Users"
-            value={data.activeUsers}
-            icon="person"
-            sub="+12.5% this month"
-          />
-          <StatCard
-            label="Published Courses"
-            value={data.publishedCourses}
-            icon="book"
-            sub="All systems live"
-          />
-          <StatCard
-            label="Total Courses"
-            value={data.totalCourses}
-            icon="library_books"
-            sub={`${data.totalCourses - data.publishedCourses} in draft`}
-          />
+          <div className="flex gap-8 mt-6">
+            <StatPill label="Active Users" value={data.activeUsers} />
+            <div className="w-px bg-white/20" />
+            <StatPill label="Published" value={data.publishedCourses} />
+            <div className="w-px bg-white/20" />
+            <StatPill label="Total Courses" value={data.totalCourses} />
+          </div>
         </div>
 
-        {/* Quick links + announcements */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <section className="lg:col-span-2 space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-extrabold tracking-tight text-[#1a1b22]">
-                Quick Management
-              </h2>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-4">
+            <p className="text-sm font-semibold text-zinc-500 uppercase tracking-wider">
+              Quick Actions
+            </p>
+            <div className="grid sm:grid-cols-3 gap-3">
               <QuickCard
                 label="System Overview"
-                desc="Configure global instance settings."
+                desc="Courses, enrollments, activity"
                 href="/admin/overview"
-                icon="settings_suggest"
+                icon="analytics"
               />
               <QuickCard
                 label="Manage Users"
-                desc="Audit roles and permissions."
+                desc="Create and manage accounts"
                 href="/admin/users"
                 icon="manage_accounts"
               />
               <QuickCard
                 label="Grade Book"
-                desc="Assess student performance data."
+                desc="Review assessment results"
                 href="/instructor/grades"
                 icon="grade"
               />
             </div>
-          </section>
-          <section>
-            <AnnouncementsPanel items={announcements} />
-          </section>
+          </div>
+          <Announcements items={announcements} />
         </div>
       </div>
     );
@@ -279,249 +255,191 @@ export default function DashboardPage() {
   /* ── INSTRUCTOR ── */
   if (user.role === "instructor") {
     return (
-      <div className="max-w-5xl mx-auto space-y-10">
-        <header className="flex items-end justify-between">
-          <div>
-            <p className="text-[#3525cd] font-bold tracking-[0.2em] text-[10px] uppercase mb-1">
-              Architecture of Learning
-            </p>
-            <h1 className="text-4xl font-extrabold tracking-tight text-[#1a1b22]">
-              Welcome back, {firstName}.
-            </h1>
+      <div className="max-w-5xl mx-auto space-y-8">
+        {/* Hero */}
+        <div className="rounded-2xl bg-gradient-to-br from-slate-800 to-slate-900 p-8 text-white relative overflow-hidden">
+          <div className="absolute -top-8 -right-8 w-48 h-48 bg-white/5 rounded-full" />
+          <div className="absolute -bottom-12 -left-6 w-40 h-40 bg-indigo-600/20 rounded-full" />
+          <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest mb-1">
+            Instructor
+          </p>
+          <h1 className="text-3xl font-black tracking-tight mb-1">
+            Welcome back, {firstName}.
+          </h1>
+          <p className="text-slate-400 text-sm">
+            Manage your courses and track learner progress.
+          </p>
+          <div className="flex gap-8 mt-6">
+            <StatPill label="My Courses" value={data.myCourses?.length || 0} />
+            <div className="w-px bg-white/20" />
+            <StatPill label="Enrolled Staff" value={data.enrolledCount || 0} />
           </div>
           <Link
             href="/instructor/courses/new"
-            className="px-5 py-2.5 signature-gradient text-white rounded-lg font-semibold text-sm shadow-lg shadow-[#4f46e5]/20 active:scale-95 transition-all flex items-center gap-2"
+            className="absolute top-6 right-6 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1.5"
           >
-            <span className="material-symbols-outlined text-[18px]">
-              add_circle
-            </span>
-            Create New Course
+            <span className="material-symbols-outlined text-[16px]">add</span>
+            New Course
           </Link>
-        </header>
+        </div>
 
-        <div className="grid grid-cols-12 gap-8">
-          {/* Left column */}
-          <div className="col-span-12 lg:col-span-4 flex flex-col gap-6">
-            <StatCard
-              label="My Courses"
-              value={data.myCourses?.length || 0}
-              icon="menu_book"
-              sub="+2 this month"
-            />
-            <StatCard
-              label="Enrolled Staff"
-              value={data.enrolledCount || 0}
-              icon="badge"
-              sub="Active Learners"
-            />
-            <AnnouncementsPanel items={announcements} />
-          </div>
-
-          {/* Courses list */}
-          <div className="col-span-12 lg:col-span-8">
-            <div className="bg-white rounded-xl border border-[#c7c4d8]/10 shadow-sm overflow-hidden">
-              <div className="p-6 border-b border-[#eeedf7]">
-                <h3 className="text-xl font-bold text-[#1a1b22]">My Courses</h3>
-                <p className="text-sm text-zinc-500">
-                  Manage and update your active learning modules.
-                </p>
-              </div>
-              <div className="divide-y divide-[#eeedf7]">
-                {(data.myCourses || []).slice(0, 6).map((c: any) => (
-                  <div
-                    key={c._id}
-                    className="p-5 flex items-center justify-between hover:bg-[#f4f2fd] transition-colors group"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-11 h-11 rounded-lg bg-[#e2dfff] flex items-center justify-center text-[#3525cd]">
-                        <span className="material-symbols-outlined text-[20px]">
-                          terminal
-                        </span>
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-[#1a1b22]">{c.title}</h4>
-                        <p className="text-[10px] font-medium text-zinc-400 uppercase tracking-wider">
-                          {c.modules?.length || 0} Modules
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-6">
-                      <span
-                        className={`px-3 py-1 text-[10px] font-black uppercase rounded-full tracking-widest ${
-                          c.status === "published"
-                            ? "bg-[#e2dfff] text-[#3525cd] border border-[#c3c0ff]"
-                            : "bg-zinc-100 text-zinc-500"
-                        }`}
-                      >
-                        {c.status}
-                      </span>
-                      <Link
-                        href={`/instructor/courses/${c._id}`}
-                        className="flex items-center gap-1 text-[#3525cd] font-bold text-sm group-hover:translate-x-1 transition-transform"
-                      >
-                        Edit
-                        <span className="material-symbols-outlined text-[18px]">
-                          arrow_forward
-                        </span>
-                      </Link>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {(data.myCourses?.length || 0) > 6 && (
-                <div className="p-5 bg-[#f4f2fd] flex justify-center">
-                  <Link
-                    href="/instructor/courses"
-                    className="text-zinc-500 font-bold text-xs uppercase tracking-widest flex items-center gap-2 hover:text-[#3525cd] transition-colors"
-                  >
-                    View All Courses
-                    <span className="material-symbols-outlined text-[16px]">
-                      expand_more
-                    </span>
-                  </Link>
-                </div>
-              )}
+        <div className="grid lg:grid-cols-3 gap-6">
+          {/* Course list */}
+          <div className="lg:col-span-2 bg-white rounded-xl border border-zinc-100 overflow-hidden">
+            <div className="px-5 py-4 border-b border-zinc-50 flex items-center justify-between">
+              <p className="text-sm font-semibold text-zinc-900">My Courses</p>
+              <Link
+                href="/instructor/courses"
+                className="text-xs text-indigo-600 hover:underline"
+              >
+                View all
+              </Link>
             </div>
+            <ul className="divide-y divide-zinc-50">
+              {(data.myCourses || []).slice(0, 6).map((c: any) => (
+                <li
+                  key={c._id}
+                  className="px-5 py-3.5 flex items-center justify-between hover:bg-zinc-50 transition-colors"
+                >
+                  <div>
+                    <p className="text-sm font-medium text-zinc-900">
+                      {c.title}
+                    </p>
+                    <p className="text-xs text-zinc-400 mt-0.5">
+                      {c.modules?.length || 0} modules · {c.category}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${c.status === "published" ? "bg-emerald-50 text-emerald-700" : "bg-zinc-100 text-zinc-500"}`}
+                    >
+                      {c.status}
+                    </span>
+                    <Link
+                      href={`/instructor/courses/${c._id}`}
+                      className="text-xs text-indigo-600 hover:underline font-medium"
+                    >
+                      Edit →
+                    </Link>
+                  </div>
+                </li>
+              ))}
+            </ul>
           </div>
+          <Announcements items={announcements} />
         </div>
       </div>
     );
   }
 
   /* ── STUDENT ── */
+  const { courses, progressMap, pending } = data;
+  const inProgress = courses.filter(
+    (c: any) => progressMap[c._id] > 0 && progressMap[c._id] < 100,
+  );
+  const notStarted = courses.filter(
+    (c: any) => !progressMap[c._id] || progressMap[c._id] === 0,
+  );
+  const completed = courses.filter((c: any) => progressMap[c._id] === 100);
+
+  // Pick the most-recently-in-progress course for the hero
+  const heroCard = inProgress[0] || notStarted[0];
+
   return (
-    <div className="max-w-5xl mx-auto space-y-10">
-      <header>
-        <h1 className="text-4xl font-black tracking-tight text-[#1a1b22] mb-1">
-          Welcome back, {firstName}.
-        </h1>
-        <p className="text-zinc-500 font-medium">
-          {data.pending?.length > 0
-            ? `You have ${data.pending.length} pending assessment${data.pending.length > 1 ? "s" : ""} that require your attention today.`
-            : "You're all caught up. Keep learning!"}
-        </p>
-      </header>
-
-      <div className="grid grid-cols-12 gap-6">
-        {/* Left column */}
-        <div className="col-span-12 lg:col-span-4 flex flex-col gap-6">
-          <StatCard
-            label="Active Courses"
-            value={String(data.courseProgress?.length || 0).padStart(2, "0")}
-            icon="auto_stories"
-          />
-          <StatCard
-            label="Assessments"
-            value={String(data.pending?.length || 0).padStart(2, "0")}
-            icon="quiz"
-            accent="tertiary"
-          />
-          <AnnouncementsPanel items={announcements} />
-        </div>
-
-        {/* Right column */}
-        <div className="col-span-12 lg:col-span-8 flex flex-col gap-6">
-          {/* Progress panel */}
-          <div className="bg-white rounded-xl p-8 border border-[#c7c4d8]/10 shadow-sm">
-            <div className="flex items-center justify-between mb-8">
-              <div>
-                <h4 className="text-xl font-bold text-[#1a1b22]">
-                  My Learning Progress
-                </h4>
-                <p className="text-xs text-zinc-400 mt-0.5">
-                  Continue where you left off
-                </p>
-              </div>
-            </div>
-            {data.courseProgress?.length === 0 ? (
-              <p className="text-sm text-zinc-400 text-center py-6">
-                No courses assigned yet.
+    <div className="space-y-10">
+      {/* Hero banner */}
+      {heroCard && (
+        <div className="rounded-2xl overflow-hidden relative h-52 bg-gradient-to-br from-indigo-700 via-violet-700 to-purple-800 flex items-end">
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+          <div className="relative z-10 p-8 w-full flex items-end justify-between">
+            <div>
+              <p className="text-indigo-300 text-xs font-semibold uppercase tracking-widest mb-1">
+                {inProgress.length > 0 ? "Continue Learning" : "Start Here"}
               </p>
-            ) : (
-              <div className="space-y-7">
-                {data.courseProgress?.map(
-                  ({ course, completed, total, pct }: any) => (
-                    <div
-                      key={course._id}
-                      className="grid grid-cols-12 gap-4 items-center"
-                    >
-                      <div className="col-span-12 md:col-span-5 flex items-center gap-4">
-                        <div className="w-16 h-12 rounded-lg bg-[#e8e7f1] flex items-center justify-center shrink-0">
-                          <span className="material-symbols-outlined text-[#3525cd] text-[24px]">
-                            auto_stories
-                          </span>
-                        </div>
-                        <div>
-                          <Link
-                            href={`/courses/${course._id}`}
-                            className="text-sm font-bold text-[#1a1b22] hover:text-[#3525cd] transition-colors"
-                          >
-                            {course.title}
-                          </Link>
-                          <p className="text-[10px] text-zinc-400">
-                            {completed} of {total} Lessons complete
-                          </p>
-                        </div>
-                      </div>
-                      <div className="col-span-12 md:col-span-5">
-                        <div className="h-2 w-full bg-[#e3e1ec] rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-[#4f46e5] rounded-full transition-all"
-                            style={{ width: `${pct}%` }}
-                          />
-                        </div>
-                      </div>
-                      <div className="col-span-12 md:col-span-2 text-right">
-                        <span className="text-xs font-black text-[#1a1b22]">
-                          {pct}%
-                        </span>
-                      </div>
-                    </div>
-                  ),
-                )}
-              </div>
-            )}
+              <h1 className="text-2xl font-black text-white tracking-tight leading-tight max-w-lg">
+                {heroCard.title}
+              </h1>
+              {progressMap[heroCard._id] > 0 && (
+                <p className="text-white/60 text-sm mt-1">
+                  {progressMap[heroCard._id]}% complete
+                </p>
+              )}
+            </div>
+            <Link
+              href={`/courses/${heroCard._id}/learn`}
+              className="shrink-0 flex items-center gap-2 px-5 py-2.5 bg-white text-indigo-700 font-bold text-sm rounded-full hover:bg-indigo-50 transition-colors shadow-lg"
+            >
+              <svg
+                className="w-4 h-4 ml-0.5"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path d="M8 5v14l11-7z" />
+              </svg>
+              {inProgress.length > 0 ? "Continue" : "Start"}
+            </Link>
           </div>
-
-          {/* Pending assessments */}
-          {data.pending?.length > 0 && (
-            <div className="bg-[#f4f2fd] rounded-xl p-8 border border-white/50">
-              <h4 className="text-xl font-bold text-[#1a1b22] mb-6">
-                Pending Assessments
-              </h4>
-              <div className="grid md:grid-cols-2 gap-4">
-                {data.pending.map((a: any) => (
-                  <div
-                    key={a._id}
-                    className="bg-white p-5 rounded-xl flex flex-col justify-between hover:shadow-lg transition-shadow duration-300"
-                  >
-                    <div>
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="px-2 py-0.5 bg-[#ffdad6] text-[#93000a] text-[10px] font-bold rounded">
-                          PENDING
-                        </span>
-                      </div>
-                      <h5 className="font-bold text-sm mb-1 text-[#1a1b22]">
-                        {a.title}
-                      </h5>
-                    </div>
-                    <Link
-                      href={`/courses/${a.courseId}/assessment/${a._id}`}
-                      className="flex items-center gap-1 text-[#3525cd] text-xs font-bold group mt-4"
-                    >
-                      Start Assessment
-                      <span className="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">
-                        arrow_forward
-                      </span>
-                    </Link>
-                  </div>
-                ))}
-              </div>
+          {/* Progress bar at bottom of hero */}
+          {progressMap[heroCard._id] > 0 && (
+            <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/20">
+              <div
+                className="h-full bg-indigo-400 transition-all"
+                style={{ width: `${progressMap[heroCard._id]}%` }}
+              />
             </div>
           )}
         </div>
-      </div>
+      )}
+
+      {/* Pending assessments strip */}
+      {pending.length > 0 && (
+        <div className="flex items-center gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+          <span className="material-symbols-outlined text-amber-600 text-[20px]">
+            quiz
+          </span>
+          <p className="text-sm text-amber-800 font-medium flex-1">
+            You have <strong>{pending.length}</strong> pending assessment
+            {pending.length > 1 ? "s" : ""}.
+          </p>
+          <div className="flex gap-2 flex-wrap">
+            {pending.slice(0, 2).map((a: any) => (
+              <Link
+                key={a._id}
+                href={`/courses/${a.courseId}/assessment/${a._id}`}
+                className="text-xs font-semibold text-amber-700 bg-amber-100 hover:bg-amber-200 px-3 py-1.5 rounded-lg transition-colors"
+              >
+                {a.title} →
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Course rows */}
+      <CourseRow
+        title="Continue Learning"
+        courses={inProgress}
+        progressMap={progressMap}
+      />
+      <CourseRow
+        title="Not Started Yet"
+        courses={notStarted}
+        progressMap={progressMap}
+      />
+      <CourseRow
+        title="Completed"
+        courses={completed}
+        progressMap={progressMap}
+      />
+
+      {courses.length === 0 && (
+        <div className="text-center py-20">
+          <span className="material-symbols-outlined text-zinc-200 text-[64px]">
+            school
+          </span>
+          <p className="text-zinc-400 text-sm mt-3">No courses assigned yet.</p>
+        </div>
+      )}
     </div>
   );
 }
