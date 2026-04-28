@@ -18,13 +18,17 @@ export const authConfig: NextAuthConfig = {
       return isLoggedIn;
     },
     async jwt({ token, user }) {
-      if (user) token.role = (user as any).role;
+      if (user) {
+        token.role = (user as any).role;
+        token.mustChangePassword = (user as any).mustChangePassword ?? false;
+      }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         (session.user as any).id = token.sub;
         (session.user as any).role = token.role;
+        (session.user as any).mustChangePassword = token.mustChangePassword;
       }
       return session;
     },

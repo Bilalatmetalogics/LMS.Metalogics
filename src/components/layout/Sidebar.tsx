@@ -45,16 +45,16 @@ function NavLinks({
             href={item.href}
             onClick={onNav}
             className={cn(
-              "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all",
+              "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all",
               active
-                ? "bg-indigo-600 text-white font-semibold"
-                : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 font-medium",
+                ? "bg-indigo-500/20 text-indigo-300 font-semibold border border-indigo-500/30"
+                : "text-slate-400 hover:text-white hover:bg-white/5 font-medium border border-transparent",
             )}
           >
             <span
               className={cn(
                 "material-symbols-outlined text-[20px]",
-                active ? "text-white" : "text-zinc-400",
+                active ? "text-indigo-300" : "text-slate-500",
               )}
             >
               {item.icon}
@@ -73,53 +73,64 @@ export default function Sidebar({ role }: { role: string }) {
   const [open, setOpen] = useState(false);
 
   const logo = (
-    <div className="px-4 py-5 flex items-center gap-2.5">
+    <div className="px-4 py-5 flex items-center gap-2.5 border-b border-white/5">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/METALOGICS-SVG-02.png"
+        src="/METALOGICS-White.png"
         alt="MetaLogics"
         className="h-7 w-auto object-contain"
         onError={(e) => {
-          (e.target as HTMLImageElement).style.display = "none";
+          const el = e.target as HTMLImageElement;
+          el.style.display = "none";
+          el.parentElement!.innerHTML =
+            '<span class="text-white font-black text-lg tracking-tight">metalogics</span>';
         }}
       />
     </div>
   );
 
   const bottom = (
-    <div className="px-3 pb-4 space-y-0.5 border-t border-zinc-100 pt-3">
+    <div className="px-3 pb-4 space-y-0.5 border-t border-white/5 pt-3">
       <Link
-        href="#"
-        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition-colors"
+        href="/settings/password"
+        className={cn(
+          "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all border",
+          pathname === "/settings/password"
+            ? "bg-indigo-500/20 text-indigo-300 font-semibold border-indigo-500/30"
+            : "text-slate-500 hover:text-white hover:bg-white/5 border-transparent",
+        )}
       >
-        <span className="material-symbols-outlined text-[20px]">settings</span>
-        Settings
+        <span className="material-symbols-outlined text-[20px]">key</span>
+        Change Password
       </Link>
-      <div className="px-3 pt-2">
-        <p className="text-[10px] font-semibold text-zinc-300 uppercase tracking-widest">
+      <div className="px-3 pt-3">
+        <span className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest">
           {role}
-        </p>
+        </span>
       </div>
     </div>
   );
+
+  const sidebarClasses =
+    "flex flex-col h-full bg-slate-900 border-r border-white/5";
 
   return (
     <>
       {/* Mobile hamburger */}
       <button
         type="button"
-        className="md:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-white border border-zinc-200 shadow-sm"
+        className="md:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-slate-800 border border-white/10 shadow-sm"
         onClick={() => setOpen(true)}
         aria-label="Open menu"
       >
-        <span className="material-symbols-outlined text-zinc-600 text-[20px]">
+        <span className="material-symbols-outlined text-slate-300 text-[20px]">
           menu
         </span>
       </button>
 
       {open && (
         <div
-          className="md:hidden fixed inset-0 z-40 bg-black/20"
+          className="md:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
           onClick={() => setOpen(false)}
         />
       )}
@@ -127,7 +138,8 @@ export default function Sidebar({ role }: { role: string }) {
       {/* Mobile drawer */}
       <aside
         className={cn(
-          "md:hidden fixed inset-y-0 left-0 z-50 w-56 bg-white border-r border-zinc-100 flex flex-col transition-transform duration-200",
+          "md:hidden fixed inset-y-0 left-0 z-50 w-56 flex flex-col transition-transform duration-200",
+          sidebarClasses,
           open ? "translate-x-0" : "-translate-x-full",
         )}
       >
@@ -136,9 +148,9 @@ export default function Sidebar({ role }: { role: string }) {
           <button
             type="button"
             onClick={() => setOpen(false)}
-            className="p-1.5 rounded-lg hover:bg-zinc-100"
+            className="p-1.5 rounded-lg hover:bg-white/5"
           >
-            <span className="material-symbols-outlined text-zinc-400 text-[20px]">
+            <span className="material-symbols-outlined text-slate-400 text-[20px]">
               close
             </span>
           </button>
@@ -148,7 +160,12 @@ export default function Sidebar({ role }: { role: string }) {
       </aside>
 
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex w-56 shrink-0 bg-white border-r border-zinc-100 flex-col h-screen sticky top-0">
+      <aside
+        className={cn(
+          "hidden md:flex w-56 shrink-0 flex-col h-screen sticky top-0",
+          sidebarClasses,
+        )}
+      >
         {logo}
         <NavLinks nav={nav} pathname={pathname} />
         {bottom}

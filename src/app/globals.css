@@ -98,6 +98,131 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* ── Login page tokens (dark theme) ─────────────────────────── */
+:root {
+  --primary-deep: oklch(0.22 0.16 265);
+  --primary-glow: oklch(0.55 0.22 265);
+  --gradient-primary: linear-gradient(
+    135deg,
+    oklch(0.32 0.18 265),
+    oklch(0.45 0.22 268)
+  );
+  --gradient-mesh:
+    radial-gradient(
+      at 20% 20%,
+      oklch(0.55 0.22 265 / 0.35) 0px,
+      transparent 50%
+    ),
+    radial-gradient(at 80% 0%, oklch(0.45 0.2 280 / 0.3) 0px, transparent 50%),
+    radial-gradient(at 80% 80%, oklch(0.5 0.2 250 / 0.3) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, oklch(0.6 0.18 270 / 0.25) 0px, transparent 50%);
+  --shadow-elegant: 0 20px 60px -20px oklch(0.32 0.18 265 / 0.45);
+  --shadow-glow: 0 0 40px oklch(0.55 0.22 265 / 0.5);
+}
+
+/* Login utilities */
+.bg-primary-deep {
+  background-color: var(--primary-deep);
+}
+.bg-gradient-primary {
+  background: var(--gradient-primary);
+}
+.bg-gradient-mesh {
+  background: var(--gradient-mesh);
+}
+.bg-primary-glow\/30 {
+  background-color: oklch(0.55 0.22 265 / 0.3);
+}
+.bg-primary\/40 {
+  background-color: oklch(0.32 0.18 265 / 0.4);
+}
+.bg-primary-glow\/25 {
+  background-color: oklch(0.55 0.22 265 / 0.25);
+}
+.shadow-elegant {
+  box-shadow: var(--shadow-elegant);
+}
+.shadow-glow {
+  box-shadow: var(--shadow-glow);
+}
+
+/* Blob animation */
+@keyframes blob-float {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(40px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-30px, 30px) scale(0.95);
+  }
+}
+.animate-blob {
+  animation: blob-float 18s ease-in-out infinite;
+}
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+/* Grid drift */
+@keyframes grid-drift {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 60px 60px;
+  }
+}
+.bg-grid {
+  background-image:
+    linear-gradient(to right, oklch(1 0 0 / 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, oklch(1 0 0 / 0.06) 1px, transparent 1px);
+  background-size: 60px 60px;
+  animation: grid-drift 30s linear infinite;
+}
+
+/* Shimmer */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(200%);
+  }
+}
+.animate-shimmer {
+  animation: shimmer 2.5s ease-in-out infinite;
+}
+
+/* Fade up */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-up {
+  animation: fade-up 0.6s ease-out backwards;
+}
+
+/* Animation delay utilities for fade-up */
+.delay-100 {
+  animation-delay: 0.1s;
+}
+.delay-200 {
+  animation-delay: 0.2s;
+}
+
+/* ── Scrollbar ───────────────────────────────────────────────── */
 /* Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
