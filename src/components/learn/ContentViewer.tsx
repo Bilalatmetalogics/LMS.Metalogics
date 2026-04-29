@@ -4,7 +4,6 @@ import { useRef, useEffect, useCallback, useState } from "react";
 import { ExternalLink, FileText, Loader2 } from "lucide-react";
 
 type ContentType = "video" | "youtube" | "link" | "pdf";
-
 type ContentItem = {
   _id: string;
   title: string;
@@ -21,32 +20,24 @@ function getYouTubeId(url: string): string | null {
   return m?.[1] ?? null;
 }
 
-/**
- * Fetches a signed (or passthrough) URL from /api/media/[videoId].
- * Returns null while loading, the resolved URL once ready.
- */
 function useSecureUrl(item: ContentItem, courseId: string): string | null {
   const [secureUrl, setSecureUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    // YouTube and external links don't need signing — use directly
     if (item.type === "youtube" || item.type === "link") {
       setSecureUrl(item.url);
       return;
     }
-
     setSecureUrl(null);
     let cancelled = false;
-
     fetch(`/api/media/${item._id}?courseId=${courseId}`)
       .then((r) => r.json())
       .then((data) => {
         if (!cancelled) setSecureUrl(data.url ?? item.url);
       })
       .catch(() => {
-        if (!cancelled) setSecureUrl(item.url); // fallback
+        if (!cancelled) setSecureUrl(item.url);
       });
-
     return () => {
       cancelled = true;
     };
@@ -72,15 +63,15 @@ export default function ContentViewer({
   return (
     <div className="space-y-4 max-w-3xl">
       <div>
-        <h2 className="text-lg font-semibold text-zinc-900">{item.title}</h2>
+        <h2 className="text-lg font-semibold text-white">{item.title}</h2>
         {item.description && (
-          <p className="text-sm text-zinc-500 mt-1">{item.description}</p>
+          <p className="text-sm text-slate-400 mt-1">{item.description}</p>
         )}
       </div>
 
       {!secureUrl ? (
-        <div className="flex items-center justify-center h-48 rounded-xl border border-zinc-200 bg-zinc-50">
-          <Loader2 className="w-5 h-5 text-zinc-400 animate-spin" />
+        <div className="flex items-center justify-center h-48 rounded-2xl border border-white/10 bg-white/5">
+          <Loader2 className="w-5 h-5 text-slate-500 animate-spin" />
         </div>
       ) : (
         <>
@@ -121,8 +112,6 @@ export default function ContentViewer({
     </div>
   );
 }
-
-// ── Native video with progress tracking ──────────────────────────────────────
 
 function VideoContent({
   item,
@@ -194,29 +183,25 @@ function VideoContent({
     <>
       {pct > 0 && (
         <div className="flex items-center gap-2">
-          <div className="flex-1 h-1 bg-zinc-100 rounded-full overflow-hidden">
+          <div className="flex-1 h-1 bg-white/10 rounded-full overflow-hidden">
             <div
               className="h-full bg-indigo-500 rounded-full transition-all"
               style={{ width: `${pct}%` }}
             />
           </div>
-          <span className="text-xs text-zinc-400">{Math.round(pct)}%</span>
+          <span className="text-xs text-slate-400">{Math.round(pct)}%</span>
         </div>
       )}
       <video
         ref={videoRef}
         src={resolvedUrl}
         controls
-        className="w-full rounded-xl border border-zinc-200 bg-black aspect-video"
+        className="w-full rounded-2xl border border-white/10 bg-black aspect-video"
         controlsList="nodownload"
       />
     </>
   );
 }
-
-// ── Auto-complete hook for non-video content ─────────────────────────────────
-// Links, PDFs, and YouTube are considered "completed" on first view since
-// there's no watch-time to track. This unblocks the next item in sequence.
 
 function useAutoComplete(
   item: ContentItem,
@@ -224,8 +209,7 @@ function useAutoComplete(
   onProgressSaved?: () => void,
 ) {
   useEffect(() => {
-    if (item.type === "video") return; // video handles its own progress
-    // Mark as completed with a synthetic 100% progress entry
+    if (item.type === "video") return;
     fetch("/api/progress", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -242,8 +226,6 @@ function useAutoComplete(
   }, [item._id, item.type, courseId]);
 }
 
-// ── YouTube embed ─────────────────────────────────────────────────────────────
-
 function YouTubeContent({
   item,
   courseId,
@@ -258,13 +240,13 @@ function YouTubeContent({
 
   if (!videoId) {
     return (
-      <div className="rounded-xl border border-zinc-200 p-6 text-center text-sm text-zinc-400">
+      <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-center text-sm text-slate-400">
         Invalid YouTube URL.{" "}
         <a
           href={item.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-indigo-600 hover:underline"
+          className="text-indigo-400 hover:underline"
         >
           Open link
         </a>
@@ -273,7 +255,7 @@ function YouTubeContent({
   }
 
   return (
-    <div className="rounded-xl overflow-hidden border border-zinc-200 aspect-video">
+    <div className="rounded-2xl overflow-hidden border border-white/10 aspect-video">
       <iframe
         src={`https://www.youtube.com/embed/${videoId}`}
         title={item.title}
@@ -284,8 +266,6 @@ function YouTubeContent({
     </div>
   );
 }
-
-// ── External link ─────────────────────────────────────────────────────────────
 
 function LinkContent({
   item,
@@ -300,21 +280,23 @@ function LinkContent({
 }) {
   useAutoComplete(item, courseId, onProgressSaved);
   return (
-    <div className="rounded-xl border border-zinc-200 p-6 space-y-4">
+    <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 space-y-4">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center shrink-0">
-          <ExternalLink className="w-5 h-5 text-blue-500" />
+        <div className="w-10 h-10 rounded-xl bg-blue-500/20 border border-blue-400/30 flex items-center justify-center shrink-0">
+          <ExternalLink className="w-5 h-5 text-blue-400" />
         </div>
         <div className="min-w-0">
-          <p className="text-sm font-medium text-zinc-900">{item.title}</p>
-          <p className="text-xs text-zinc-400 truncate">{resolvedUrl}</p>
+          <p className="text-sm font-medium text-white">{item.title}</p>
+          <p className="text-xs text-slate-400 truncate mt-0.5">
+            {resolvedUrl}
+          </p>
         </div>
       </div>
       <a
         href={resolvedUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors"
+        className="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-500 to-blue-600 text-white text-sm font-semibold rounded-xl transition hover:opacity-90"
       >
         <ExternalLink className="w-4 h-4" />
         Open resource
@@ -322,8 +304,6 @@ function LinkContent({
     </div>
   );
 }
-
-// ── PDF viewer ────────────────────────────────────────────────────────────────
 
 function PdfContent({
   item,
@@ -340,7 +320,7 @@ function PdfContent({
   return (
     <div className="space-y-3">
       <div
-        className="rounded-xl border border-zinc-200 overflow-hidden"
+        className="rounded-2xl border border-white/10 overflow-hidden"
         style={{ height: "70vh" }}
       >
         <iframe
@@ -353,7 +333,7 @@ function PdfContent({
         href={resolvedUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex items-center gap-2 text-sm text-indigo-600 hover:underline"
+        className="inline-flex items-center gap-2 text-sm text-indigo-400 hover:text-indigo-300 transition-colors"
       >
         <FileText className="w-4 h-4" />
         Open PDF in new tab

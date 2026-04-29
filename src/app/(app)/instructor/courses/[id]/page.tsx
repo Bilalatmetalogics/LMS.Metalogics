@@ -8,7 +8,7 @@ import ModuleBuilder from "@/components/instructor/ModuleBuilder";
 import AssignUsers from "@/components/instructor/AssignUsers";
 import AnnouncementForm from "@/components/instructor/AnnouncementForm";
 import Link from "next/link";
-import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { ChevronRight, BarChart3 } from "lucide-react";
 
 export default function CourseEditorPage() {
   const { user } = useAuth();
@@ -17,6 +17,9 @@ export default function CourseEditorPage() {
   const [assigned, setAssigned] = useState<any[]>([]);
   const [unassigned, setUnassigned] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<
+    "details" | "modules" | "assign" | "announce"
+  >("details");
 
   useEffect(() => {
     Promise.all([
@@ -33,59 +36,104 @@ export default function CourseEditorPage() {
   }, [params.id]);
 
   if (!user || !["admin", "instructor"].includes(user.role)) return null;
-  if (loading || !course) return null;
+
+  if (loading)
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <div className="w-5 h-5 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+
+  if (!course) return null;
+
+  const tabs = [
+    { id: "details", label: "Details" },
+    { id: "modules", label: "Modules & Content" },
+    { id: "assign", label: "Assign Staff" },
+    { id: "announce", label: "Announcement" },
+  ] as const;
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 text-white">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4">
         <div>
-          <Breadcrumbs
-            items={[
-              { label: "My Courses", href: "/instructor/courses" },
-              { label: course.title },
-            ]}
-          />
-          <h1 className="text-xl font-semibold text-zinc-900">Edit Course</h1>
+          <nav className="flex items-center gap-1.5 text-xs text-slate-400 mb-2">
+            <Link
+              href="/instructor/courses"
+              className="hover:text-white transition-colors"
+            >
+              My Courses
+            </Link>
+            <ChevronRight className="h-3 w-3" />
+            <span className="text-white">{course.title}</span>
+          </nav>
+          <h1 className="text-2xl font-bold text-white tracking-tight">
+            Edit Course
+          </h1>
         </div>
         <Link
           href={`/instructor/grades?courseId=${params.id}`}
-          className="text-sm text-indigo-600 hover:underline"
+          className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-300 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all"
         >
-          View grade book →
+          <BarChart3 className="h-3.5 w-3.5" />
+          Grade book
         </Link>
       </div>
 
-      <section>
-        <h2 className="text-sm font-semibold text-zinc-700 mb-3">
-          Course Details
-        </h2>
-        <CourseForm course={course} />
-      </section>
+      {/* Tab nav */}
+      <div className="flex gap-1 p-1 bg-white/5 border border-white/10 rounded-xl w-fit">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setActiveTab(tab.id)}
+            className={`px-4 py-2 text-xs font-semibold rounded-lg transition-all ${
+              activeTab === tab.id
+                ? "bg-indigo-500/20 border border-indigo-400/30 text-indigo-300"
+                : "text-slate-400 hover:text-white"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
 
-      <section>
-        <h2 className="text-sm font-semibold text-zinc-700 mb-3">
-          Modules & Videos
-        </h2>
-        <ModuleBuilder course={course} />
-      </section>
-
-      <section>
-        <h2 className="text-sm font-semibold text-zinc-700 mb-3">
-          Assign Staff
-        </h2>
-        <AssignUsers
-          courseId={params.id}
-          assigned={assigned}
-          unassigned={unassigned}
-        />
-      </section>
-
-      <section>
-        <h2 className="text-sm font-semibold text-zinc-700 mb-3">
-          Post Announcement
-        </h2>
-        <AnnouncementForm courseId={params.id} />
-      </section>
+      {/* Tab content */}
+      <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6">
+        {activeTab === "details" && (
+          <div className="space-y-3">
+            <h2 className="text-sm font-semibold text-white">Course Details</h2>
+            <CourseForm course={course} />
+          </div>
+        )}
+        {activeTab === "modules" && (
+          <div className="space-y-3">
+            <h2 className="text-sm font-semibold text-white">
+              Modules & Content
+            </h2>
+            <ModuleBuilder course={course} />
+          </div>
+        )}
+        {activeTab === "assign" && (
+          <div className="space-y-3">
+            <h2 className="text-sm font-semibold text-white">Assign Staff</h2>
+            <AssignUsers
+              courseId={params.id}
+              assigned={assigned}
+              unassigned={unassigned}
+            />
+          </div>
+        )}
+        {activeTab === "announce" && (
+          <div className="space-y-3">
+            <h2 className="text-sm font-semibold text-white">
+              Post Announcement
+            </h2>
+            <AnnouncementForm courseId={params.id} />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

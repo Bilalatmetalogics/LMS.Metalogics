@@ -13,6 +13,11 @@ const navByRole: Record<string, NavItem[]> = {
     { label: "Overview", href: "/admin/overview", icon: "bar_chart" },
     { label: "Courses", href: "/instructor/courses", icon: "play_circle" },
     { label: "Users", href: "/admin/users", icon: "group" },
+    {
+      label: "Certificates",
+      href: "/admin/certificates",
+      icon: "workspace_premium",
+    },
   ],
   instructor: [
     { label: "Dashboard", href: "/dashboard", icon: "home" },
@@ -47,14 +52,16 @@ function NavLinks({
             className={cn(
               "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all",
               active
-                ? "bg-indigo-500/20 text-indigo-300 font-semibold border border-indigo-500/30"
-                : "text-slate-400 hover:text-white hover:bg-white/5 font-medium border border-transparent",
+                ? "bg-[var(--sidebar-accent)] text-[var(--sidebar-accent-foreground)] font-semibold border border-[var(--sidebar-primary)]/30"
+                : "text-[var(--sidebar-foreground)] hover:text-white hover:bg-[var(--sidebar-accent)]/60 font-medium border border-transparent",
             )}
           >
             <span
               className={cn(
                 "material-symbols-outlined text-[20px]",
-                active ? "text-indigo-300" : "text-slate-500",
+                active
+                  ? "text-[var(--sidebar-primary)]"
+                  : "text-[var(--sidebar-foreground)]/60",
               )}
             >
               {item.icon}
@@ -90,21 +97,21 @@ export default function Sidebar({ role }: { role: string }) {
   );
 
   const bottom = (
-    <div className="px-3 pb-4 space-y-0.5 border-t border-white/5 pt-3">
+    <div className="px-3 pb-4 space-y-0.5 border-t border-[var(--sidebar-border)] pt-3">
       <Link
         href="/settings/password"
         className={cn(
           "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all border",
           pathname === "/settings/password"
-            ? "bg-indigo-500/20 text-indigo-300 font-semibold border-indigo-500/30"
-            : "text-slate-500 hover:text-white hover:bg-white/5 border-transparent",
+            ? "bg-[var(--sidebar-accent)] text-[var(--sidebar-accent-foreground)] font-semibold border-[var(--sidebar-primary)]/30"
+            : "text-[var(--sidebar-foreground)]/60 hover:text-white hover:bg-[var(--sidebar-accent)]/60 border-transparent",
         )}
       >
         <span className="material-symbols-outlined text-[20px]">key</span>
         Change Password
       </Link>
       <div className="px-3 pt-3">
-        <span className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest">
+        <span className="text-[10px] font-semibold text-[var(--sidebar-foreground)]/40 uppercase tracking-widest">
           {role}
         </span>
       </div>
@@ -112,7 +119,7 @@ export default function Sidebar({ role }: { role: string }) {
   );
 
   const sidebarClasses =
-    "flex flex-col h-full bg-slate-900 border-r border-white/5";
+    "flex flex-col h-full bg-[var(--sidebar)] border-r border-[var(--sidebar-border)]";
 
   return (
     <>

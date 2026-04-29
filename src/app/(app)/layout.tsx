@@ -7,6 +7,7 @@ import Sidebar from "@/components/layout/Sidebar";
 import TopBar from "@/components/layout/TopBar";
 import Link from "next/link";
 import { KeyRound } from "lucide-react";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, status } = useAuth();
@@ -33,7 +34,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const onPasswordPage = pathname === "/settings/password";
 
   return (
-    <div className="flex min-h-screen bg-slate-950 relative">
+    <div className="dark flex min-h-screen bg-[var(--background)] relative">
       {/* ── Global animated background ── */}
       <div className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-mesh opacity-50" />
@@ -67,7 +68,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         )}
 
         <main className="flex-1 px-8 py-8 md:pl-8 pl-16 min-h-0">
-          {children}
+          <ErrorBoundary>{children}</ErrorBoundary>
         </main>
       </div>
     </div>

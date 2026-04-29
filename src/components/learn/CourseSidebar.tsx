@@ -12,7 +12,6 @@ import {
 } from "lucide-react";
 
 type ContentType = "video" | "youtube" | "link" | "pdf";
-
 type ContentItem = {
   _id: string;
   title: string;
@@ -37,13 +36,13 @@ function ItemIcon({
   active?: boolean;
 }) {
   if (completed)
-    return <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0 text-green-500" />;
-
+    return (
+      <CheckCircle2 className="w-4 h-4 mt-0.5 shrink-0 text-emerald-400" />
+    );
   const cls = cn(
     "w-4 h-4 mt-0.5 shrink-0",
-    active ? "text-indigo-600" : "text-zinc-400",
+    active ? "text-indigo-300" : "text-slate-500",
   );
-
   switch (type) {
     case "youtube":
       return <Youtube className={cls} />;
@@ -70,19 +69,21 @@ export default function CourseSidebar({
   const unlockedSet = new Set(unlockedIds);
 
   return (
-    <aside className="w-72 shrink-0 border-r border-zinc-200 bg-white overflow-y-auto">
-      <div className="px-4 py-3 border-b border-zinc-100">
-        <p className="text-xs text-zinc-500 uppercase tracking-wider font-medium">
+    <aside className="w-72 shrink-0 border-r border-white/10 bg-slate-900/80 backdrop-blur-xl overflow-y-auto">
+      {/* Course title */}
+      <div className="px-4 py-3.5 border-b border-white/10">
+        <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold mb-0.5">
           Course
         </p>
-        <p className="text-sm font-semibold text-zinc-900 mt-0.5 line-clamp-2">
+        <p className="text-sm font-semibold text-white line-clamp-2">
           {course.title}
         </p>
       </div>
+
       <div className="py-2">
         {course.modules.map((mod) => (
           <div key={mod._id.toString()}>
-            <p className="px-4 py-2 text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+            <p className="px-4 py-2 text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
               {mod.title}
             </p>
             {mod.videos.map((item) => {
@@ -105,10 +106,10 @@ export default function CourseSidebar({
                     <Link
                       href={`/courses/${course._id}/learn?video=${vid}`}
                       className={cn(
-                        "flex items-start gap-3 px-4 py-2.5 text-sm transition-colors",
+                        "flex items-start gap-3 px-4 py-2.5 text-sm transition-all",
                         isActive
-                          ? "bg-indigo-50 text-indigo-700"
-                          : "text-zinc-700 hover:bg-zinc-50",
+                          ? "bg-indigo-500/15 border-l-2 border-indigo-400 text-indigo-300"
+                          : "text-slate-300 hover:bg-white/5 hover:text-white border-l-2 border-transparent",
                       )}
                     >
                       <ItemIcon
@@ -120,9 +121,8 @@ export default function CourseSidebar({
                         <p className="text-sm leading-snug line-clamp-2">
                           {item.title}
                         </p>
-                        {/* Progress bar — only for video type */}
                         {type === "video" && pct > 0 && (
-                          <div className="mt-1 h-0.5 bg-zinc-100 rounded-full overflow-hidden">
+                          <div className="mt-1.5 h-0.5 bg-white/10 rounded-full overflow-hidden">
                             <div
                               className="h-full bg-indigo-400 rounded-full"
                               style={{ width: `${pct}%` }}
@@ -132,9 +132,9 @@ export default function CourseSidebar({
                       </div>
                     </Link>
                   ) : (
-                    <div className="flex items-start gap-3 px-4 py-2.5 text-sm opacity-40 cursor-not-allowed">
-                      <Lock className="w-4 h-4 mt-0.5 shrink-0 text-zinc-400" />
-                      <p className="text-sm leading-snug line-clamp-2 text-zinc-500">
+                    <div className="flex items-start gap-3 px-4 py-2.5 text-sm opacity-30 cursor-not-allowed border-l-2 border-transparent">
+                      <Lock className="w-4 h-4 mt-0.5 shrink-0 text-slate-500" />
+                      <p className="text-sm leading-snug line-clamp-2 text-slate-500">
                         {item.title}
                       </p>
                     </div>

@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/useAuth";
 import Link from "next/link";
-import { BookOpen } from "lucide-react";
+import { BookOpen, ChevronRight } from "lucide-react";
+import { TableRowSkeleton } from "@/components/ui/skeleton";
 
 type Course = {
   _id: string;
@@ -30,111 +31,133 @@ export default function InstructorCoursesPage() {
   }, []);
 
   if (!user || !["admin", "instructor"].includes(user.role)) return null;
-  if (loading) return null;
 
   const isAdmin = user.role === "admin";
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="space-y-6 text-white">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-zinc-900">
+          <h1 className="text-2xl font-bold text-white tracking-tight">
             {isAdmin ? "All Courses" : "My Courses"}
           </h1>
-          <p className="text-sm text-zinc-500 mt-0.5">
-            {courses.length} course{courses.length !== 1 ? "s" : ""}
+          <p className="text-sm text-slate-400 mt-0.5">
+            {loading
+              ? "Loading…"
+              : `${courses.length} course${courses.length !== 1 ? "s" : ""}`}
           </p>
         </div>
         <Link
           href="/instructor/courses/new"
-          className="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors"
+          className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-indigo-500 to-blue-600 text-white text-sm font-semibold rounded-xl shadow-lg transition hover:opacity-90"
         >
+          <span className="material-symbols-outlined text-[16px]">add</span>
           New course
         </Link>
       </div>
 
-      {courses.length === 0 ? (
-        <div className="bg-white border border-zinc-200 rounded-xl py-16 text-center">
-          <BookOpen className="w-8 h-8 text-zinc-200 mx-auto mb-3" />
-          <p className="text-sm text-zinc-400">
-            No courses yet. Create your first one.
-          </p>
-        </div>
-      ) : (
-        <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden">
+      <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl">
+        {!loading && courses.length === 0 ? (
+          <div className="py-16 text-center">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-white/5 border border-white/10 mb-4">
+              <BookOpen className="h-6 w-6 text-slate-500" />
+            </div>
+            <p className="text-sm font-medium text-white">No courses yet</p>
+            <p className="text-xs text-slate-500 mt-1">
+              Create your first course to get started
+            </p>
+          </div>
+        ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-zinc-100 bg-zinc-50">
-                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500">
+              <tr className="border-b border-white/10 bg-white/[0.02]">
+                <th className="text-left px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                   Title
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500">
+                <th className="text-left px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                   Category
                 </th>
                 {isAdmin && (
-                  <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500">
+                  <th className="text-left px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                     Instructor
                   </th>
                 )}
-                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500">
+                <th className="text-left px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                   Modules
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500">
+                <th className="text-left px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                   Status
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-zinc-500">
+                <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-slate-400 text-right">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-100">
-              {courses.map((c) => (
-                <tr key={c._id} className="hover:bg-zinc-50 transition-colors">
-                  <td className="px-4 py-3 font-medium text-zinc-900">
-                    {c.title}
-                  </td>
-                  <td className="px-4 py-3 text-zinc-500">{c.category}</td>
-                  {isAdmin && (
-                    <td className="px-4 py-3 text-xs text-zinc-500">
-                      {c.createdBy?.name || "—"}
-                    </td>
-                  )}
-                  <td className="px-4 py-3 text-zinc-500">
-                    {c.modules?.length || 0}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`px-2 py-0.5 text-xs rounded-full ${c.status === "published" ? "bg-green-50 text-green-700" : "bg-zinc-100 text-zinc-500"}`}
+            <tbody className="divide-y divide-white/5">
+              {loading
+                ? Array.from({ length: 5 }).map((_, i) => (
+                    <TableRowSkeleton key={i} cols={isAdmin ? 6 : 5} />
+                  ))
+                : courses.map((c) => (
+                    <tr
+                      key={c._id}
+                      className="hover:bg-white/[0.03] transition-colors"
                     >
-                      {c.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 flex items-center gap-3">
-                    <Link
-                      href={`/courses/${c._id}`}
-                      className="text-xs text-zinc-500 hover:text-zinc-900"
-                    >
-                      View
-                    </Link>
-                    <Link
-                      href={`/instructor/courses/${c._id}`}
-                      className="text-xs text-indigo-600 hover:underline"
-                    >
-                      Edit
-                    </Link>
-                    <Link
-                      href={`/instructor/grades?courseId=${c._id}`}
-                      className="text-xs text-zinc-500 hover:text-zinc-900"
-                    >
-                      Grades
-                    </Link>
-                  </td>
-                </tr>
-              ))}
+                      <td className="px-5 py-3.5 font-medium text-white">
+                        {c.title}
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <span className="text-xs text-slate-400 bg-white/5 border border-white/10 px-2 py-0.5 rounded-full">
+                          {c.category}
+                        </span>
+                      </td>
+                      {isAdmin && (
+                        <td className="px-5 py-3.5 text-xs text-slate-400">
+                          {c.createdBy?.name || "—"}
+                        </td>
+                      )}
+                      <td className="px-5 py-3.5 text-slate-300">
+                        {c.modules?.length || 0}
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <span
+                          className={`px-2 py-0.5 text-[10px] font-semibold rounded-full border ${
+                            c.status === "published"
+                              ? "bg-emerald-500/15 text-emerald-300 border-emerald-400/30"
+                              : "bg-amber-500/15 text-amber-300 border-amber-400/30"
+                          }`}
+                        >
+                          {c.status}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3.5">
+                        <div className="flex items-center justify-end gap-3">
+                          <Link
+                            href={`/courses/${c._id}`}
+                            className="text-xs text-slate-400 hover:text-white transition-colors"
+                          >
+                            View
+                          </Link>
+                          <Link
+                            href={`/instructor/courses/${c._id}`}
+                            className="flex items-center gap-0.5 text-xs text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
+                          >
+                            Edit <ChevronRight className="h-3 w-3" />
+                          </Link>
+                          <Link
+                            href={`/instructor/grades?courseId=${c._id}`}
+                            className="text-xs text-slate-400 hover:text-white transition-colors"
+                          >
+                            Grades
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
             </tbody>
           </table>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

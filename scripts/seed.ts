@@ -1,3 +1,13 @@
+/**
+ * Seed script — creates the initial admin account.
+ *
+ * Usage:
+ *   npm run seed              — creates MBK admin only if it doesn't exist
+ *   npm run seed -- --force   — overwrites existing MBK admin (resets password)
+ *
+ * This script is SAFE to run multiple times. It will NOT recreate deleted users.
+ */
+
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import { config } from "dotenv";
@@ -16,55 +26,57 @@ const UserSchema = new mongoose.Schema(
     role: String,
     assignedCourses: [mongoose.Schema.Types.ObjectId],
     isActive: { type: Boolean, default: true },
+    mustChangePassword: { type: Boolean, default: false },
   },
   { timestamps: true },
 );
 
 const User = mongoose.models.User || mongoose.model("User", UserSchema);
 
+const ADMIN = {
+  name: "MBK",
+  email: "admin@metalogics.com",
+  password: "Admin@MetaLogics2025",
+  role: "admin",
+};
+
 async function seed() {
+  const force = process.argv.includes("--force");
+
   await mongoose.connect(MONGODB_URI as string);
   console.log("Connected to MongoDB");
 
-  const users = [
-    {
-      name: "Admin User",
-      email: "admin@company.com",
-      password: "Admin@123",
-      role: "admin",
-    },
-    {
-      name: "Jane Instructor",
-      email: "instructor@company.com",
-      password: "Instructor@123",
-      role: "instructor",
-    },
-    {
-      name: "John Student",
-      email: "student@company.com",
-      password: "Student@123",
-      role: "student",
-    },
-  ];
+  const existing = await User.findOne({ email: ADMIN.email });
 
-  for (const u of users) {
-    const passwordHash = await bcrypt.hash(u.password, 12);
-    await User.findOneAndUpdate(
-      { email: u.email },
-      {
-        name: u.name,
-        email: u.email,
-        passwordHash,
-        role: u.role,
-        isActive: true,
-      },
-      { upsert: true, new: true },
-    );
-    console.log(`✓ ${u.role}: ${u.email} / ${u.password}`);
+  if (existing && !force) {
+    console.log(`\n✓ Admin account already exists: ${ADMIN.email}`);
+    console.log("  Use --force to reset the password.");
+    await mongoose.disconnect();
+    return;
   }
 
-  await mongoose.disconnect();
+  const passwordHash = await bcrypt.hash(ADMIN.password, 12);
+
+  await User.findOneAndUpdate(
+    { email: ADMIN.email },
+    {
+      name: ADMIN.name,
+      email: ADMIN.email,
+      passwordHash,
+      role: ADMIN.role,
+      isActive: true,
+      mustChangePassword: false,
+    },
+    { upsert: true, new: true },
+  );
+
+  console.log(`\n✓ Admin account ${existing ? "reset" : "created"}:`);
+  console.log(`  Email:    ${ADMIN.email}`);
+  console.log(`  Password: ${ADMIN.password}`);
+  console.log(`  Role:     admin`);
   console.log("\nSeed complete.");
+
+  await mongoose.disconnect();
 }
 
 seed().catch(console.error);

@@ -5,7 +5,9 @@ import UserProgress from "@/models/UserProgress";
 import Course from "@/models/Course";
 import User from "@/models/User";
 import Notification from "@/models/Notification";
+import Certificate from "@/models/Certificate";
 import { emitNotification } from "@/lib/socket";
+import { progressLimiter } from "@/lib/rateLimit";
 
 const UNLOCK_THRESHOLD = 0.75;
 
@@ -14,8 +16,14 @@ export async function PATCH(req: NextRequest) {
   if (!session)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { videoId, courseId, watchedSeconds, totalSeconds } = await req.json();
   const userId = (session.user as any).id;
+
+  // Rate limit progress updates (video heartbeat — 120/min is generous)
+  const limit = progressLimiter(userId);
+  if (!limit.success)
+    return NextResponse.json({ error: "Too many requests." }, { status: 429 });
+
+  const { videoId, courseId, watchedSeconds, totalSeconds } = await req.json();
   const role = (session.user as any).role;
 
   await connectDB();
@@ -80,6 +88,32 @@ export async function PATCH(req: NextRequest) {
         };
         await Notification.create({ userId, ...notifPayload });
         emitNotification(userId, notifPayload);
+      }
+
+      // Check if the entire course is now complete
+      const allVideoIds = course.modules.flatMap((m: any) =>
+        m.videos.map((v: any) => v._id.toString()),
+      );
+      if (allVideoIds.length > 0) {
+        const completedCount = await UserProgress.countDocuments({
+          userId,
+          courseId,
+          completed: true,
+        });
+        if (completedCount >= allVideoIds.length) {
+          // Auto-create certificate request (idempotent)
+          const existing = await Certificate.findOne({ userId, courseId });
+          if (!existing) {
+            await Certificate.create({ userId, courseId, status: "pending" });
+            const notifPayload = {
+              type: "certificate",
+              message: `You've completed "${course.title}"! Your certificate request has been submitted for admin approval.`,
+              link: `/courses/${courseId}/certificate`,
+            };
+            await Notification.create({ userId, ...notifPayload });
+            emitNotification(userId, notifPayload);
+          }
+        }
       }
     }
   }

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useAuth } from "@/lib/useAuth";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { useNotifications } from "@/lib/useNotifications";
 
@@ -33,7 +33,6 @@ export default function TopBar({
   user: { id: string; name: string };
 }) {
   const { logout } = useAuth();
-  const router = useRouter();
   const { unread, refresh } = useNotifications();
   const pageTitle = usePageTitle();
 
@@ -50,7 +49,7 @@ export default function TopBar({
       .toUpperCase() ?? "U";
 
   return (
-    <header className="h-14 bg-slate-900/80 border-b border-white/5 backdrop-blur-xl flex items-center justify-between px-6 shrink-0 sticky top-0 z-30">
+    <header className="h-14 bg-[var(--sidebar)]/80 border-b border-[var(--sidebar-border)] backdrop-blur-xl flex items-center justify-between px-6 shrink-0 sticky top-0 z-30">
       {/* Page title */}
       <h2 className="text-sm font-semibold text-white/80 tracking-tight">
         {pageTitle}
@@ -89,10 +88,7 @@ export default function TopBar({
         {/* Sign out */}
         <button
           type="button"
-          onClick={() => {
-            logout();
-            router.push("/login");
-          }}
+          onClick={() => logout()}
           className="p-2 rounded-xl border border-transparent hover:border-white/10 hover:bg-rose-500/10 transition-all text-slate-500 hover:text-rose-400"
           aria-label="Sign out"
           title="Sign out"

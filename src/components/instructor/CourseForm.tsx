@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Loader2 } from "lucide-react";
 
 type Course = {
   _id: string;
@@ -24,7 +24,7 @@ export default function CourseForm({ course }: { course?: Course }) {
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     setError("");
@@ -45,11 +45,8 @@ export default function CourseForm({ course }: { course?: Course }) {
     if (res.ok) {
       const data = await res.json();
       if (!course) {
-        // New course — navigate to editor
-        const id = data._id || data.id;
-        router.push(`/instructor/courses/${id}`);
+        router.push(`/instructor/courses/${data._id || data.id}`);
       } else {
-        // Existing course — stay on page, show confirmation
         setSaved(true);
         setTimeout(() => setSaved(false), 3000);
         router.refresh();
@@ -61,27 +58,26 @@ export default function CourseForm({ course }: { course?: Course }) {
     setLoading(false);
   }
 
+  const inputCls =
+    "w-full px-3 py-2.5 text-sm bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-500 outline-none focus:border-indigo-400/50 focus:ring-2 focus:ring-indigo-500/20 transition-all";
+  const labelCls = "text-xs font-medium text-slate-300";
+
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-white border border-zinc-200 rounded-xl p-6 space-y-4"
-    >
+    <form onSubmit={handleSubmit} className="space-y-4">
       {saved && (
-        <div className="flex items-center gap-2 text-sm text-green-700 bg-green-50 border border-green-100 rounded-lg px-3 py-2">
+        <div className="flex items-center gap-2 text-sm text-emerald-300 bg-emerald-500/10 border border-emerald-400/30 rounded-xl px-3 py-2">
           <CheckCircle2 className="w-4 h-4 shrink-0" />
           Course saved.
         </div>
       )}
       {error && (
-        <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+        <p className="text-sm text-red-300 bg-red-500/10 border border-red-400/30 rounded-xl px-3 py-2">
           {error}
         </p>
       )}
-      <div className="space-y-1">
-        <label
-          htmlFor="course-title"
-          className="text-sm font-medium text-zinc-700"
-        >
+
+      <div className="space-y-1.5">
+        <label htmlFor="course-title" className={labelCls}>
           Title
         </label>
         <input
@@ -91,14 +87,12 @@ export default function CourseForm({ course }: { course?: Course }) {
           onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
           required
           placeholder="e.g. Onboarding Fundamentals"
-          className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
+          className={inputCls}
         />
       </div>
-      <div className="space-y-1">
-        <label
-          htmlFor="course-desc"
-          className="text-sm font-medium text-zinc-700"
-        >
+
+      <div className="space-y-1.5">
+        <label htmlFor="course-desc" className={labelCls}>
           Description
         </label>
         <textarea
@@ -110,15 +104,13 @@ export default function CourseForm({ course }: { course?: Course }) {
           required
           rows={3}
           placeholder="What will staff learn in this course?"
-          className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+          className={`${inputCls} resize-none`}
         />
       </div>
+
       <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-1">
-          <label
-            htmlFor="course-category"
-            className="text-sm font-medium text-zinc-700"
-          >
+        <div className="space-y-1.5">
+          <label htmlFor="course-category" className={labelCls}>
             Category
           </label>
           <input
@@ -130,14 +122,11 @@ export default function CourseForm({ course }: { course?: Course }) {
             }
             required
             placeholder="e.g. Safety, HR, Technical"
-            className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
+            className={inputCls}
           />
         </div>
-        <div className="space-y-1">
-          <label
-            htmlFor="course-status"
-            className="text-sm font-medium text-zinc-700"
-          >
+        <div className="space-y-1.5">
+          <label htmlFor="course-status" className={labelCls}>
             Status
           </label>
           <select
@@ -149,20 +138,26 @@ export default function CourseForm({ course }: { course?: Course }) {
                 status: e.target.value as "draft" | "published",
               }))
             }
-            className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
+            className={inputCls}
           >
-            <option value="draft">Draft</option>
-            <option value="published">Published</option>
+            <option value="draft" className="bg-slate-900">
+              Draft
+            </option>
+            <option value="published" className="bg-slate-900">
+              Published
+            </option>
           </select>
         </div>
       </div>
-      <div className="flex justify-end pt-2">
+
+      <div className="flex justify-end pt-1">
         <button
           type="submit"
           disabled={loading}
-          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white text-sm font-medium rounded-lg transition-colors"
+          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-blue-600 disabled:opacity-60 text-white text-sm font-semibold rounded-xl transition-all hover:opacity-90"
         >
-          {loading ? "Saving..." : course ? "Save changes" : "Create course"}
+          {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+          {loading ? "Saving…" : course ? "Save changes" : "Create course"}
         </button>
       </div>
     </form>

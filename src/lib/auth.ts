@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { connectDB } from "@/lib/db";
 import User from "@/models/User";
 import { authConfig } from "./auth.config";
+import { rateLimit } from "@/lib/rateLimit";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
@@ -15,6 +16,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
+
+        // Rate limit: 10 login attempts per 15 min per email
+        const limit = rateLimit(credentials.email as string, {
+          limit: 10,
+          windowSec: 15 * 60,
+          prefix: "login",
+        });
+        if (!limit.success) {
+          console.error("[auth] Rate limit exceeded for:", credentials.email);
+          throw new Error("Too many login attempts. Please try again later.");
+        }
 
         try {
           await connectDB();

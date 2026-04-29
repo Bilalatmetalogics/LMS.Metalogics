@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { v2 as cloudinary } from "cloudinary";
+import { uploadLimiter } from "@/lib/rateLimit";
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -18,6 +19,15 @@ export async function GET(req: NextRequest) {
   const role = (session?.user as any)?.role;
   if (!["admin", "instructor"].includes(role))
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  // Rate limit uploads per user
+  const userId = (session?.user as any)?.id;
+  const limit = uploadLimiter(userId);
+  if (!limit.success)
+    return NextResponse.json(
+      { error: "Upload limit reached. Try again later." },
+      { status: 429 },
+    );
 
   const { searchParams } = new URL(req.url);
   const resourceType = searchParams.get("resource_type") || "video";

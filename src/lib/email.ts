@@ -1,9 +1,22 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-const FROM = "MetaLogics LMS <onboarding@resend.dev>";
 const APP_URL = process.env.AUTH_URL || "http://localhost:3000";
+
+// SMTP transporter — configured via environment variables
+// Hostinger SMTP: smtp.hostinger.com, port 465 (SSL) or 587 (TLS)
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST || "smtp.hostinger.com",
+  port: parseInt(process.env.SMTP_PORT || "465"),
+  secure: (process.env.SMTP_PORT || "465") === "465", // true for 465, false for 587
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+});
+
+const FROM_NAME = process.env.SMTP_FROM_NAME || "MetaLogics LMS";
+const FROM_EMAIL = process.env.SMTP_USER || "noreply@bilal.metalogics.io";
+const FROM = `${FROM_NAME} <${FROM_EMAIL}>`;
 
 export async function sendWelcomeEmail({
   name,
@@ -24,8 +37,7 @@ export async function sendWelcomeEmail({
   <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 20px;">
     <tr><td align="center">
       <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e4e4e7;">
-        
-        <!-- Header -->
+
         <tr>
           <td style="background:linear-gradient(135deg,#4f46e5,#7c3aed);padding:32px 40px;">
             <p style="margin:0;color:#c7d2fe;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;">MetaLogics LMS</p>
@@ -33,16 +45,15 @@ export async function sendWelcomeEmail({
           </td>
         </tr>
 
-        <!-- Body -->
         <tr>
           <td style="padding:32px 40px;">
             <p style="margin:0 0 16px;color:#3f3f46;font-size:15px;">Hi <strong>${name}</strong>,</p>
             <p style="margin:0 0 24px;color:#71717a;font-size:14px;line-height:1.6;">
-              An account has been created for you on MetaLogics LMS as a <strong style="color:#4f46e5;text-transform:capitalize;">${role}</strong>. 
+              An account has been created for you on MetaLogics LMS as a
+              <strong style="color:#4f46e5;text-transform:capitalize;">${role}</strong>.
               Use the credentials below to log in.
             </p>
 
-            <!-- Credentials box -->
             <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;border-radius:8px;margin-bottom:24px;">
               <tr>
                 <td style="padding:20px 24px;">
@@ -61,7 +72,6 @@ export async function sendWelcomeEmail({
               </tr>
             </table>
 
-            <!-- Warning -->
             <table width="100%" cellpadding="0" cellspacing="0" style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;margin-bottom:28px;">
               <tr>
                 <td style="padding:12px 16px;font-size:13px;color:#92400e;">
@@ -70,14 +80,12 @@ export async function sendWelcomeEmail({
               </tr>
             </table>
 
-            <!-- CTA -->
             <a href="${APP_URL}/login" style="display:inline-block;background:#4f46e5;color:#ffffff;text-decoration:none;font-size:14px;font-weight:700;padding:12px 28px;border-radius:8px;">
               Log in to LMS →
             </a>
           </td>
         </tr>
 
-        <!-- Footer -->
         <tr>
           <td style="padding:20px 40px;border-top:1px solid #f4f4f5;">
             <p style="margin:0;font-size:12px;color:#a1a1aa;">
@@ -92,7 +100,7 @@ export async function sendWelcomeEmail({
 </body>
 </html>`;
 
-  return resend.emails.send({
+  return transporter.sendMail({
     from: FROM,
     to: email,
     subject: "Your MetaLogics LMS account is ready",
@@ -117,7 +125,7 @@ export async function sendPasswordResetEmail({
   <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 20px;">
     <tr><td align="center">
       <table width="560" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e4e4e7;">
-        
+
         <tr>
           <td style="background:linear-gradient(135deg,#0f172a,#1e293b);padding:32px 40px;">
             <p style="margin:0;color:#94a3b8;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;">MetaLogics LMS</p>
@@ -176,7 +184,7 @@ export async function sendPasswordResetEmail({
 </body>
 </html>`;
 
-  return resend.emails.send({
+  return transporter.sendMail({
     from: FROM,
     to: email,
     subject: "Your MetaLogics LMS password has been reset",

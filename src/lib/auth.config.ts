@@ -10,9 +10,15 @@ export const authConfig: NextAuthConfig = {
       const isLoggedIn = !!auth?.user;
       const pathname = nextUrl.pathname;
       const isPublic =
+        pathname === "/" ||
         pathname.startsWith("/login") ||
         pathname.startsWith("/api/auth") ||
         pathname.startsWith("/api/debug");
+
+      // Authenticated user hitting the root → send to dashboard
+      if (isLoggedIn && pathname === "/") {
+        return Response.redirect(new URL("/dashboard", nextUrl));
+      }
 
       if (isPublic) return true;
       return isLoggedIn;

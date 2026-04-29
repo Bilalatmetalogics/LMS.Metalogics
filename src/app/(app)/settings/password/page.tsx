@@ -21,10 +21,9 @@ export default function ChangePasswordPage() {
 
   const isForcedChange = (user as any)?.mustChangePassword;
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
-
     if (form.newPassword.length < 8) {
       setError("New password must be at least 8 characters");
       return;
@@ -49,28 +48,25 @@ export default function ChangePasswordPage() {
     });
     const data = await res.json();
     setLoading(false);
-
     if (res.ok) {
       setSuccess(true);
       setTimeout(() => router.push("/dashboard"), 2000);
-    } else {
-      setError(data.error || "Failed to update password");
-    }
+    } else setError(data.error || "Failed to update password");
   }
 
   if (!user) return null;
 
   return (
-    <div className="max-w-md mx-auto">
+    <div className="max-w-md mx-auto text-white">
       {/* Forced change banner */}
       {isForcedChange && (
-        <div className="mb-6 flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl">
-          <span className="text-amber-500 text-lg mt-0.5">⚠️</span>
+        <div className="mb-6 flex items-start gap-3 p-4 bg-amber-500/10 border border-amber-400/30 rounded-2xl">
+          <span className="text-amber-400 text-lg mt-0.5">⚠️</span>
           <div>
-            <p className="text-sm font-semibold text-amber-800">
+            <p className="text-sm font-semibold text-amber-300">
               Password change required
             </p>
-            <p className="text-xs text-amber-700 mt-0.5">
+            <p className="text-xs text-amber-400/80 mt-0.5">
               You're using a temporary password. Please set a new one to
               continue.
             </p>
@@ -78,39 +74,35 @@ export default function ChangePasswordPage() {
         </div>
       )}
 
-      <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden">
+      <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl">
         {/* Header */}
-        <div className="px-6 py-5 border-b border-zinc-100 flex items-center gap-3">
-          <div className="w-9 h-9 bg-indigo-50 rounded-lg flex items-center justify-center">
-            <KeyRound className="w-4 h-4 text-indigo-600" />
+        <div className="px-6 py-5 border-b border-white/10 flex items-center gap-3">
+          <div className="w-9 h-9 bg-indigo-500/20 border border-indigo-400/30 rounded-xl flex items-center justify-center">
+            <KeyRound className="w-4 h-4 text-indigo-300" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-zinc-900">
-              Change password
-            </p>
-            <p className="text-xs text-zinc-400 mt-0.5">{user.email}</p>
+            <p className="text-sm font-semibold text-white">Change password</p>
+            <p className="text-xs text-slate-400 mt-0.5">{user.email}</p>
           </div>
         </div>
 
         {success ? (
           <div className="px-6 py-10 flex flex-col items-center gap-3 text-center">
-            <CheckCircle2 className="w-10 h-10 text-emerald-500" />
-            <p className="text-sm font-semibold text-zinc-900">
-              Password updated
-            </p>
-            <p className="text-xs text-zinc-400">Redirecting to dashboard...</p>
+            <CheckCircle2 className="w-10 h-10 text-emerald-400" />
+            <p className="text-sm font-semibold text-white">Password updated</p>
+            <p className="text-xs text-slate-400">Redirecting to dashboard…</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
             {error && (
-              <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+              <p className="text-xs text-red-300 bg-red-500/10 border border-red-400/30 rounded-lg px-3 py-2">
                 {error}
               </p>
             )}
 
             {/* Current password */}
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-zinc-600">
+              <label className="text-xs font-medium text-slate-300">
                 Current password
               </label>
               <div className="relative">
@@ -122,12 +114,12 @@ export default function ChangePasswordPage() {
                   }
                   required
                   placeholder="Enter current password"
-                  className="w-full px-3 py-2 pr-10 text-sm border border-zinc-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2.5 pr-10 text-sm bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-500 outline-none focus:border-indigo-400/50 focus:ring-2 focus:ring-indigo-500/20 transition-all"
                 />
                 <button
                   type="button"
                   onClick={() => setShowCurrent((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
                 >
                   {showCurrent ? (
                     <EyeOff className="w-4 h-4" />
@@ -140,7 +132,7 @@ export default function ChangePasswordPage() {
 
             {/* New password */}
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-zinc-600">
+              <label className="text-xs font-medium text-slate-300">
                 New password
               </label>
               <div className="relative">
@@ -152,12 +144,12 @@ export default function ChangePasswordPage() {
                   }
                   required
                   placeholder="Min. 8 characters"
-                  className="w-full px-3 py-2 pr-10 text-sm border border-zinc-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2.5 pr-10 text-sm bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-500 outline-none focus:border-indigo-400/50 focus:ring-2 focus:ring-indigo-500/20 transition-all"
                 />
                 <button
                   type="button"
                   onClick={() => setShowNew((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
                 >
                   {showNew ? (
                     <EyeOff className="w-4 h-4" />
@@ -166,7 +158,6 @@ export default function ChangePasswordPage() {
                   )}
                 </button>
               </div>
-              {/* Strength indicator */}
               {form.newPassword && (
                 <PasswordStrength password={form.newPassword} />
               )}
@@ -174,7 +165,7 @@ export default function ChangePasswordPage() {
 
             {/* Confirm */}
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-zinc-600">
+              <label className="text-xs font-medium text-slate-300">
                 Confirm new password
               </label>
               <input
@@ -185,11 +176,11 @@ export default function ChangePasswordPage() {
                 }
                 required
                 placeholder="Repeat new password"
-                className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2.5 text-sm bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-500 outline-none focus:border-indigo-400/50 focus:ring-2 focus:ring-indigo-500/20 transition-all"
               />
               {form.confirmPassword &&
                 form.newPassword !== form.confirmPassword && (
-                  <p className="text-xs text-red-500">Passwords don't match</p>
+                  <p className="text-xs text-red-400">Passwords don't match</p>
                 )}
             </div>
 
@@ -198,7 +189,7 @@ export default function ChangePasswordPage() {
                 <button
                   type="button"
                   onClick={() => router.back()}
-                  className="text-sm text-zinc-500 hover:text-zinc-700"
+                  className="text-sm text-slate-400 hover:text-white transition-colors"
                 >
                   Cancel
                 </button>
@@ -206,10 +197,10 @@ export default function ChangePasswordPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="ml-auto px-5 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
+                className="ml-auto px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-blue-600 disabled:opacity-60 text-white text-sm font-semibold rounded-xl transition-all flex items-center gap-2 hover:opacity-90"
               >
                 {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                {loading ? "Updating..." : "Update password"}
+                {loading ? "Updating…" : "Update password"}
               </button>
             </div>
           </form>
@@ -227,11 +218,17 @@ function PasswordStrength({ password }: { password: string }) {
     { label: "Special char", pass: /[^A-Za-z0-9]/.test(password) },
   ];
   const score = checks.filter((c) => c.pass).length;
-  const colors = [
+  const barColors = [
     "bg-red-400",
     "bg-orange-400",
     "bg-yellow-400",
     "bg-emerald-400",
+  ];
+  const textColors = [
+    "text-red-400",
+    "text-orange-400",
+    "text-yellow-400",
+    "text-emerald-400",
   ];
   const labels = ["Weak", "Fair", "Good", "Strong"];
 
@@ -241,9 +238,7 @@ function PasswordStrength({ password }: { password: string }) {
         {[0, 1, 2, 3].map((i) => (
           <div
             key={i}
-            className={`h-1 flex-1 rounded-full transition-all ${
-              i < score ? colors[score - 1] : "bg-zinc-100"
-            }`}
+            className={`h-1 flex-1 rounded-full transition-all ${i < score ? barColors[score - 1] : "bg-white/10"}`}
           />
         ))}
       </div>
@@ -252,7 +247,7 @@ function PasswordStrength({ password }: { password: string }) {
           {checks.map((c) => (
             <span
               key={c.label}
-              className={`text-[10px] ${c.pass ? "text-emerald-600" : "text-zinc-400"}`}
+              className={`text-[10px] ${c.pass ? "text-emerald-400" : "text-slate-500"}`}
             >
               {c.pass ? "✓" : "·"} {c.label}
             </span>
@@ -260,7 +255,7 @@ function PasswordStrength({ password }: { password: string }) {
         </div>
         {score > 0 && (
           <span
-            className={`text-[10px] font-semibold ${colors[score - 1].replace("bg-", "text-")}`}
+            className={`text-[10px] font-semibold ${textColors[score - 1]}`}
           >
             {labels[score - 1]}
           </span>

@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/db";
 import User from "@/models/User";
 import bcrypt from "bcryptjs";
 import { sendWelcomeEmail } from "@/lib/email";
+import { createUserLimiter, getClientIp } from "@/lib/rateLimit";
 
 // GET /api/users — admin only
 export async function GET() {
@@ -40,6 +41,15 @@ export async function POST(req: NextRequest) {
   const session = await auth();
   if ((session?.user as any)?.role !== "admin")
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  // Rate limit user creation per IP
+  const ip = getClientIp(req);
+  const limit = createUserLimiter(ip);
+  if (!limit.success)
+    return NextResponse.json(
+      { error: "Too many requests. Please slow down." },
+      { status: 429 },
+    );
 
   const { name, email, role } = await req.json();
   if (!name || !email)
@@ -78,8 +88,15 @@ export async function POST(req: NextRequest) {
       role: role || "student",
     });
     emailSent = true;
-  } catch (err) {
-    console.error("[email] Failed to send welcome email:", err);
+  } catch (err: any) {
+    console.error("[email] Failed to send welcome email:", err?.message || err);
+    // Fallback: log credentials to server console
+    console.log(`\n[email] FALLBACK CREDENTIALS for ${email.toLowerCase()}:`);
+    console.log(`  Password: ${tempPassword}`);
+    console.log(
+      `  Reason: Resend free tier only delivers to verified addresses.`,
+    );
+    console.log(`  Fix: Verify your domain at https://resend.com/domains\n`);
   }
 
   return NextResponse.json(

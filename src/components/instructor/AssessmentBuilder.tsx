@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { CheckCircle2, Loader2, Plus, Trash2 } from "lucide-react";
 
 type QType = "mcq" | "truefalse" | "short";
 type Q = {
@@ -27,6 +28,9 @@ type ExistingAssessment = {
   passingScore: number;
   questions: Q[];
 };
+
+const inputCls =
+  "w-full px-3 py-2.5 text-sm bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-500 outline-none focus:border-indigo-400/50 focus:ring-2 focus:ring-indigo-500/20 transition-all";
 
 export default function AssessmentBuilder({
   courseId,
@@ -61,7 +65,6 @@ export default function AssessmentBuilder({
   async function save() {
     setLoading(true);
     setError("");
-
     const payload = { courseId, moduleId, title, passingScore, questions };
     const res = existing
       ? await fetch(`/api/assessments/${existing._id}`, {
@@ -74,33 +77,32 @@ export default function AssessmentBuilder({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
-
     if (res.ok) {
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
-    } else {
-      setError("Failed to save assessment");
-    }
+    } else setError("Failed to save assessment");
     setLoading(false);
   }
 
   return (
     <div className="space-y-6">
       {saved && (
-        <p className="text-sm text-green-600 bg-green-50 border border-green-100 rounded-lg px-3 py-2">
-          Assessment saved.
-        </p>
+        <div className="flex items-center gap-2 text-sm text-emerald-300 bg-emerald-500/10 border border-emerald-400/30 rounded-xl px-3 py-2">
+          <CheckCircle2 className="w-4 h-4 shrink-0" /> Assessment saved.
+        </div>
       )}
       {error && (
-        <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+        <p className="text-sm text-red-300 bg-red-500/10 border border-red-400/30 rounded-xl px-3 py-2">
           {error}
         </p>
       )}
-      <div className="bg-white border border-zinc-200 rounded-xl p-4 grid sm:grid-cols-2 gap-4">
-        <div className="space-y-1">
+
+      {/* Header fields */}
+      <div className="grid sm:grid-cols-2 gap-4">
+        <div className="space-y-1.5">
           <label
             htmlFor="assess-title"
-            className="text-sm font-medium text-zinc-700"
+            className="text-xs font-medium text-slate-300"
           >
             Assessment title
           </label>
@@ -110,13 +112,13 @@ export default function AssessmentBuilder({
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="e.g. Module 1 Quiz"
-            className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
+            className={inputCls}
           />
         </div>
-        <div className="space-y-1">
+        <div className="space-y-1.5">
           <label
             htmlFor="passing-score"
-            className="text-sm font-medium text-zinc-700"
+            className="text-xs font-medium text-slate-300"
           >
             Passing score (%)
           </label>
@@ -127,19 +129,21 @@ export default function AssessmentBuilder({
             max={100}
             value={passingScore}
             onChange={(e) => setPassingScore(Number(e.target.value))}
-            className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
+            className={inputCls}
           />
         </div>
       </div>
 
+      {/* Questions */}
       <div className="space-y-4">
         {questions.map((q, idx) => (
           <div
             key={q._id}
-            className="bg-white border border-zinc-200 rounded-xl p-4 space-y-3"
+            className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-5 space-y-4"
           >
+            {/* Question header */}
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-zinc-500">
+              <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
                 Question {idx + 1}
               </span>
               <div className="flex items-center gap-3">
@@ -149,11 +153,17 @@ export default function AssessmentBuilder({
                     updateQ(q._id, { type: e.target.value as QType })
                   }
                   aria-label={`Question ${idx + 1} type`}
-                  className="text-xs border border-zinc-200 rounded-md px-2 py-1 outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="text-xs bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-white outline-none focus:border-indigo-400/50 transition-all"
                 >
-                  <option value="mcq">Multiple Choice</option>
-                  <option value="truefalse">True / False</option>
-                  <option value="short">Short Answer</option>
+                  <option value="mcq" className="bg-slate-900">
+                    Multiple Choice
+                  </option>
+                  <option value="truefalse" className="bg-slate-900">
+                    True / False
+                  </option>
+                  <option value="short" className="bg-slate-900">
+                    Short Answer
+                  </option>
                 </select>
                 {questions.length > 1 && (
                   <button
@@ -161,15 +171,18 @@ export default function AssessmentBuilder({
                     onClick={() =>
                       setQuestions((p) => p.filter((x) => x._id !== q._id))
                     }
-                    className="text-xs text-red-500 hover:text-red-700"
+                    className="text-red-400 hover:text-red-300 transition-colors"
+                    aria-label="Remove question"
                   >
-                    Remove
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 )}
               </div>
             </div>
-            <div className="space-y-1">
-              <label htmlFor={`qt-${q._id}`} className="text-xs text-zinc-500">
+
+            {/* Question text */}
+            <div className="space-y-1.5">
+              <label htmlFor={`qt-${q._id}`} className="text-xs text-slate-400">
                 Question text
               </label>
               <input
@@ -177,25 +190,33 @@ export default function AssessmentBuilder({
                 type="text"
                 value={q.text}
                 onChange={(e) => updateQ(q._id, { text: e.target.value })}
-                placeholder="Enter your question..."
-                className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="Enter your question…"
+                className={inputCls}
               />
             </div>
+
+            {/* MCQ options */}
             {q.type === "mcq" && (
               <div className="space-y-2">
-                <p className="text-xs text-zinc-500">
-                  Options (select correct answer)
+                <p className="text-xs text-slate-400">
+                  Options — click the circle to mark correct answer
                 </p>
                 {q.options.map((opt, oi) => (
-                  <div key={oi} className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name={`correct-${q._id}`}
-                      checked={q.correctAnswer === opt}
-                      onChange={() => updateQ(q._id, { correctAnswer: opt })}
+                  <div key={oi} className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => updateQ(q._id, { correctAnswer: opt })}
                       aria-label={`Mark option ${oi + 1} as correct`}
-                      className="accent-indigo-600"
-                    />
+                      className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
+                        q.correctAnswer === opt
+                          ? "border-indigo-400 bg-indigo-400"
+                          : "border-white/20 hover:border-indigo-400/50"
+                      }`}
+                    >
+                      {q.correctAnswer === opt && (
+                        <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                      )}
+                    </button>
                     <input
                       type="text"
                       value={opt}
@@ -206,55 +227,67 @@ export default function AssessmentBuilder({
                       }}
                       aria-label={`Option ${oi + 1}`}
                       placeholder={`Option ${oi + 1}`}
-                      className="flex-1 px-3 py-1.5 text-sm border border-zinc-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="flex-1 px-3 py-2 text-sm bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-500 outline-none focus:border-indigo-400/50 focus:ring-2 focus:ring-indigo-500/20 transition-all"
                     />
                   </div>
                 ))}
               </div>
             )}
+
+            {/* True/False */}
             {q.type === "truefalse" && (
               <div className="flex gap-4">
                 {["True", "False"].map((val) => (
                   <label
                     key={val}
-                    className="flex items-center gap-2 text-sm text-zinc-700 cursor-pointer"
+                    className="flex items-center gap-2.5 cursor-pointer"
                   >
-                    <input
-                      type="radio"
-                      name={`tf-${q._id}`}
-                      checked={q.correctAnswer === val}
-                      onChange={() => updateQ(q._id, { correctAnswer: val })}
-                      className="accent-indigo-600"
-                    />
-                    {val}
+                    <button
+                      type="button"
+                      onClick={() => updateQ(q._id, { correctAnswer: val })}
+                      className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${
+                        q.correctAnswer === val
+                          ? "border-indigo-400 bg-indigo-400"
+                          : "border-white/20"
+                      }`}
+                    >
+                      {q.correctAnswer === val && (
+                        <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                      )}
+                    </button>
+                    <span className="text-sm text-slate-300">{val}</span>
                   </label>
                 ))}
               </div>
             )}
+
+            {/* Short answer */}
             {q.type === "short" && (
-              <p className="text-xs text-zinc-400 italic">
-                Short answer — manually graded.
+              <p className="text-xs text-slate-500 italic bg-white/5 border border-white/10 rounded-xl px-3 py-2">
+                Short answer — will be manually graded by instructor.
               </p>
             )}
           </div>
         ))}
       </div>
 
+      {/* Footer actions */}
       <div className="flex items-center justify-between">
         <button
           type="button"
           onClick={() => setQuestions((p) => [...p, emptyQ()])}
-          className="text-sm text-indigo-600 hover:text-indigo-800 font-medium"
+          className="flex items-center gap-1.5 text-sm text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
         >
-          + Add question
+          <Plus className="w-4 h-4" /> Add question
         </button>
         <button
           type="button"
           onClick={save}
           disabled={!title.trim() || loading}
-          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white text-sm font-medium rounded-lg transition-colors"
+          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-blue-600 disabled:opacity-60 text-white text-sm font-semibold rounded-xl transition-all hover:opacity-90"
         >
-          {loading ? "Saving..." : "Save assessment"}
+          {loading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+          {loading ? "Saving…" : "Save assessment"}
         </button>
       </div>
     </div>

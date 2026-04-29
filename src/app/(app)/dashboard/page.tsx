@@ -4,6 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/useAuth";
 import {
+  StatCardSkeleton,
+  HeroBannerSkeleton,
+  CourseRowSkeleton,
+  QuickCardSkeleton,
+  TableRowSkeleton,
+} from "@/components/ui/skeleton";
+import {
   BookOpen,
   Users,
   GraduationCap,
@@ -21,7 +28,6 @@ import {
   Settings,
   Plus,
   ArrowRight,
-  Loader2,
 } from "lucide-react";
 
 /* ── Types ──────────────────────────────────────────────────── */
@@ -505,11 +511,25 @@ export default function DashboardPage() {
 
   if (status === "loading" || loading) {
     return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="flex flex-col items-center gap-3 text-slate-400">
-          <Loader2 className="h-7 w-7 animate-spin text-indigo-400" />
-          <span className="text-sm">Loading your dashboard…</span>
+      <div className="space-y-10 text-white">
+        <HeroBannerSkeleton />
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <StatCardSkeleton key={i} />
+          ))}
         </div>
+        <section className="space-y-5">
+          <div className="space-y-2">
+            <div className="h-3 w-24 rounded bg-white/8 animate-pulse" />
+            <div className="h-7 w-40 rounded bg-white/8 animate-pulse" />
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <QuickCardSkeleton key={i} />
+            ))}
+          </div>
+        </section>
+        <CourseRowSkeleton count={3} />
       </div>
     );
   }

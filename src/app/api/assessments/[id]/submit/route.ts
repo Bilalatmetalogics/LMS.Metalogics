@@ -5,6 +5,7 @@ import Assessment from "@/models/Assessment";
 import AssessmentResult from "@/models/AssessmentResult";
 import Notification from "@/models/Notification";
 import { emitNotification } from "@/lib/socket";
+import { submitLimiter } from "@/lib/rateLimit";
 
 export async function POST(
   req: NextRequest,
@@ -15,6 +16,14 @@ export async function POST(
   if (!session)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const userId = (session.user as any).id;
+
+  // Rate limit assessment submissions
+  const limit = submitLimiter(userId);
+  if (!limit.success)
+    return NextResponse.json(
+      { error: "Too many submissions. Please wait before trying again." },
+      { status: 429 },
+    );
   await connectDB();
 
   const { answers, courseId } = await req.json();

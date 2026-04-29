@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { CheckCircle2, Loader2, Megaphone } from "lucide-react";
 
 export default function AnnouncementForm({ courseId }: { courseId?: string }) {
   const [form, setForm] = useState({ title: "", body: "" });
@@ -8,7 +9,7 @@ export default function AnnouncementForm({ courseId }: { courseId?: string }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     setError("");
@@ -29,25 +30,27 @@ export default function AnnouncementForm({ courseId }: { courseId?: string }) {
     setLoading(false);
   }
 
+  const inputCls =
+    "w-full px-3 py-2.5 text-sm bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-slate-500 outline-none focus:border-indigo-400/50 focus:ring-2 focus:ring-indigo-500/20 transition-all";
+
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-white border border-zinc-200 rounded-xl p-4 space-y-3"
-    >
+    <form onSubmit={handleSubmit} className="space-y-4">
       {sent && (
-        <p className="text-sm text-green-600 bg-green-50 border border-green-100 rounded-lg px-3 py-2">
-          Announcement sent.
-        </p>
+        <div className="flex items-center gap-2 text-sm text-emerald-300 bg-emerald-500/10 border border-emerald-400/30 rounded-xl px-3 py-2">
+          <CheckCircle2 className="w-4 h-4 shrink-0" />
+          Announcement sent to all enrolled staff.
+        </div>
       )}
       {error && (
-        <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+        <p className="text-sm text-red-300 bg-red-500/10 border border-red-400/30 rounded-xl px-3 py-2">
           {error}
         </p>
       )}
-      <div className="space-y-1">
+
+      <div className="space-y-1.5">
         <label
           htmlFor="ann-title"
-          className="text-sm font-medium text-zinc-700"
+          className="text-xs font-medium text-slate-300"
         >
           Title
         </label>
@@ -58,11 +61,15 @@ export default function AnnouncementForm({ courseId }: { courseId?: string }) {
           onChange={(e) => setForm((p) => ({ ...p, title: e.target.value }))}
           required
           placeholder="Announcement title"
-          className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500"
+          className={inputCls}
         />
       </div>
-      <div className="space-y-1">
-        <label htmlFor="ann-body" className="text-sm font-medium text-zinc-700">
+
+      <div className="space-y-1.5">
+        <label
+          htmlFor="ann-body"
+          className="text-xs font-medium text-slate-300"
+        >
           Message
         </label>
         <textarea
@@ -70,18 +77,24 @@ export default function AnnouncementForm({ courseId }: { courseId?: string }) {
           value={form.body}
           onChange={(e) => setForm((p) => ({ ...p, body: e.target.value }))}
           required
-          rows={3}
-          placeholder="Write your announcement..."
-          className="w-full px-3 py-2 text-sm border border-zinc-200 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+          rows={4}
+          placeholder="Write your announcement…"
+          className={`${inputCls} resize-none`}
         />
       </div>
+
       <div className="flex justify-end">
         <button
           type="submit"
           disabled={loading}
-          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white text-sm font-medium rounded-lg transition-colors"
+          className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-indigo-500 to-blue-600 disabled:opacity-60 text-white text-sm font-semibold rounded-xl transition-all hover:opacity-90"
         >
-          {loading ? "Sending..." : "Send announcement"}
+          {loading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Megaphone className="h-4 w-4" />
+          )}
+          {loading ? "Sending…" : "Send announcement"}
         </button>
       </div>
     </form>
