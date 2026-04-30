@@ -10,6 +10,7 @@ export interface IUser extends Document {
   assignedCourses: mongoose.Types.ObjectId[];
   isActive: boolean;
   mustChangePassword: boolean;
+  avatarUrl?: string;
   createdAt: Date;
 }
 
@@ -26,6 +27,7 @@ const UserSchema = new Schema<IUser>(
     assignedCourses: [{ type: Schema.Types.ObjectId, ref: "Course" }],
     isActive: { type: Boolean, default: true },
     mustChangePassword: { type: Boolean, default: false },
+    avatarUrl: { type: String },
   },
   { timestamps: true },
 );

@@ -61,6 +61,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           email: (user as any).email,
           role: (user as any).role,
           mustChangePassword: (user as any).mustChangePassword ?? false,
+          avatarUrl: (user as any).avatarUrl ?? null,
         };
       },
     }),

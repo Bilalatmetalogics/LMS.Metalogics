@@ -27,6 +27,7 @@ export const authConfig: NextAuthConfig = {
       if (user) {
         token.role = (user as any).role;
         token.mustChangePassword = (user as any).mustChangePassword ?? false;
+        token.avatarUrl = (user as any).avatarUrl ?? null;
       }
       return token;
     },
@@ -35,6 +36,7 @@ export const authConfig: NextAuthConfig = {
         (session.user as any).id = token.sub;
         (session.user as any).role = token.role;
         (session.user as any).mustChangePassword = token.mustChangePassword;
+        (session.user as any).avatarUrl = token.avatarUrl ?? null;
       }
       return session;
     },

@@ -99,6 +99,20 @@ export default function Sidebar({ role }: { role: string }) {
   const bottom = (
     <div className="px-3 pb-4 space-y-0.5 border-t border-[var(--sidebar-border)] pt-3">
       <Link
+        href="/settings/profile"
+        className={cn(
+          "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all border",
+          pathname === "/settings/profile"
+            ? "bg-[var(--sidebar-accent)] text-[var(--sidebar-accent-foreground)] font-semibold border-[var(--sidebar-primary)]/30"
+            : "text-[var(--sidebar-foreground)]/60 hover:text-white hover:bg-[var(--sidebar-accent)]/60 border-transparent",
+        )}
+      >
+        <span className="material-symbols-outlined text-[20px]">
+          account_circle
+        </span>
+        Profile
+      </Link>
+      <Link
         href="/settings/password"
         className={cn(
           "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all border",

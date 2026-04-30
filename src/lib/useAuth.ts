@@ -7,6 +7,8 @@ export interface AuthUser {
   name: string;
   email: string;
   role: "admin" | "instructor" | "student";
+  avatarUrl?: string | null;
+  mustChangePassword?: boolean;
 }
 
 export function useAuth(): {
@@ -23,6 +25,8 @@ export function useAuth(): {
           name: session.user.name ?? "",
           email: session.user.email ?? "",
           role: (session.user as any).role,
+          avatarUrl: (session.user as any).avatarUrl ?? null,
+          mustChangePassword: (session.user as any).mustChangePassword ?? false,
         }
       : null;
 
