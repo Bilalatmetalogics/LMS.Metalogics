@@ -89,8 +89,10 @@ export default function Sidebar({ role }: { role: string }) {
         onError={(e) => {
           const el = e.target as HTMLImageElement;
           el.style.display = "none";
-          el.parentElement!.innerHTML =
-            '<span class="text-white font-black text-lg tracking-tight">metalogics</span>';
+          if (el.parentElement) {
+            el.parentElement.innerHTML =
+              '<span class="text-white font-black text-lg tracking-tight">M</span><span class="text-white/70 font-semibold text-sm tracking-tight">etalogics</span>';
+          }
         }}
       />
     </div>

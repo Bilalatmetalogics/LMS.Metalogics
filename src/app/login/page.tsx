@@ -68,7 +68,12 @@ export default function LoginPage() {
               title="MetaLogics"
               className="w-7 h-7 object-contain"
               onError={(e) => {
-                (e.target as HTMLImageElement).className = "hidden";
+                const el = e.target as HTMLImageElement;
+                el.style.display = "none";
+                if (el.parentElement) {
+                  el.parentElement.innerHTML =
+                    '<span style="color:white;font-weight:900;font-size:20px;line-height:1">M</span>';
+                }
               }}
             />
           </div>
