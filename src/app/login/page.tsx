@@ -16,15 +16,28 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError("");
-    const res = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
-    if (res?.ok) {
-      router.push("/dashboard");
-    } else {
-      setError("Invalid credentials. Please check your email or password.");
+    try {
+      const res = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+      if (res?.ok) {
+        router.push("/dashboard");
+      } else {
+        setError("Invalid credentials. Please check your email or password.");
+        setLoading(false);
+      }
+    } catch (err: any) {
+      // NextAuth throws on rate limit or server error
+      const msg = err?.message || "";
+      if (msg.includes("Too many")) {
+        setError(
+          "Too many login attempts. Please wait a few minutes and try again.",
+        );
+      } else {
+        setError("Invalid credentials. Please check your email or password.");
+      }
       setLoading(false);
     }
   }
