@@ -83,7 +83,7 @@ export default function Sidebar({ role }: { role: string }) {
     <div className="px-4 py-5 flex items-center gap-2.5 border-b border-white/5">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/METALOGICS-White.png"
+        src="/logo-white.png"
         alt="MetaLogics"
         className="h-7 w-auto object-contain"
         onError={(e) => {

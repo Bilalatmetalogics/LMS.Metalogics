@@ -54,7 +54,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-2.5">
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-primary shadow-glow overflow-hidden">
               <Image
-                src="/METALOGICS-White.png"
+                src="/logo-white.png"
                 alt="MetaLogics"
                 width={28}
                 height={28}
