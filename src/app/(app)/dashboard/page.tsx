@@ -618,14 +618,12 @@ export default function DashboardPage() {
             <StatCard
               label="Active Users"
               value={userCount}
-              delta="+12%"
               icon={Users}
               color="indigo"
             />
             <StatCard
               label="Total Courses"
               value={courses.length}
-              delta="+4"
               icon={BookOpen}
               color="blue"
             />
@@ -697,14 +695,12 @@ export default function DashboardPage() {
             <StatCard
               label="Total Learners"
               value={totalEnrollments}
-              delta="+8%"
               icon={Users}
               color="blue"
             />
             <StatCard
               label="Avg. Completion"
               value="74%"
-              delta="+3%"
               icon={Award}
               color="emerald"
             />
