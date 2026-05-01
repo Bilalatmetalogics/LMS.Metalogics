@@ -10,8 +10,8 @@ export const metadata: Metadata = {
   title: "MetaLogics LMS — Internal Training",
   description: "MetaLogics Internal Learning Management System",
   icons: {
-    icon: [{ url: "/METALOGICS-SVG-02.png", type: "image/png" }],
-    apple: "/METALOGICS-SVG-02.png",
+    icon: [{ url: "/M-black.png", type: "image/png" }],
+    apple: "/M-black.png",
   },
 };
 
@@ -25,8 +25,7 @@ export default async function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <head>
-        <link rel="icon" href="/METALOGICS-SVG-02.png" type="image/png" />
-        <link rel="apple-touch-icon" href="/METALOGICS-SVG-02.png" />
+        <link rel="icon" href="/M-black.png" type="image/png" />
         <link
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
