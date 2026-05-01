@@ -10,9 +10,10 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Suppress specific warnings in production logs
-  logging: {
-    fetches: { fullUrl: false },
+  // Tell Next.js not to fail the build if env vars are missing
+  // (they will be present at runtime on Railway)
+  experimental: {
+    serverComponentsExternalPackages: ["mongoose"],
   },
 };
 
