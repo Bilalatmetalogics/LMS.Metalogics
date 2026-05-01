@@ -4,7 +4,10 @@ import Link from "next/link";
 import { useAuth } from "@/lib/useAuth";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
-import { useNotifications } from "@/lib/useNotifications";
+import {
+  useNotifications,
+  useNotificationPolling,
+} from "@/lib/useNotifications";
 import Image from "next/image";
 
 // Derive a readable page title from the current path
@@ -39,6 +42,9 @@ export default function TopBar({
   const { user: authUser, logout } = useAuth();
   const { unread, refresh } = useNotifications();
   const pageTitle = usePageTitle();
+
+  // Polling replaces Socket.io — works on all hosting platforms
+  useNotificationPolling();
 
   useEffect(() => {
     refresh();

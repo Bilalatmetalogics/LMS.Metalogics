@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { useEffect } from "react";
 
 type NotifPayload = { type: string; message: string; link?: string };
 type Listener = (payload: NotifPayload) => void;
@@ -8,7 +9,6 @@ interface NotifState {
   refresh: () => Promise<void>;
   markRead: (ids: string[]) => Promise<void>;
   increment: (payload?: NotifPayload) => void;
-  // Subscribe to incoming real-time notifications
   listeners: Listener[];
   subscribe: (fn: Listener) => () => void;
 }
@@ -38,7 +38,6 @@ export const useNotifications = create<NotifState>((set, get) => ({
     } catch {}
   },
 
-  // Called by socket listener — bumps badge and fires page-level subscribers
   increment: (payload?: NotifPayload) => {
     set((s) => ({ unread: s.unread + 1 }));
     if (payload) {
@@ -46,10 +45,30 @@ export const useNotifications = create<NotifState>((set, get) => ({
     }
   },
 
-  // Pages call subscribe() to react to incoming notifications
   subscribe: (fn: Listener) => {
     set((s) => ({ listeners: [...s.listeners, fn] }));
     return () =>
       set((s) => ({ listeners: s.listeners.filter((l) => l !== fn) }));
   },
 }));
+
+/**
+ * Polling-based notification refresh.
+ * Replaces Socket.io for environments that don't support persistent connections.
+ * Polls every 30 seconds — notifications appear with a short delay.
+ */
+export function useNotificationPolling() {
+  const refresh = useNotifications((s) => s.refresh);
+
+  useEffect(() => {
+    // Initial fetch
+    refresh();
+
+    // Poll every 30 seconds
+    const interval = setInterval(() => {
+      refresh();
+    }, 30_000);
+
+    return () => clearInterval(interval);
+  }, [refresh]);
+}
