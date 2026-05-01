@@ -9,6 +9,7 @@ type Course = {
   title: string;
   description: string;
   category: string;
+  level?: "beginner" | "intermediate" | "advanced";
   status: "draft" | "published";
 };
 
@@ -18,6 +19,10 @@ export default function CourseForm({ course }: { course?: Course }) {
     title: course?.title || "",
     description: course?.description || "",
     category: course?.category || "",
+    level: (course?.level || "beginner") as
+      | "beginner"
+      | "intermediate"
+      | "advanced",
     status: (course?.status || "draft") as "draft" | "published",
   });
   const [loading, setLoading] = useState(false);
@@ -108,7 +113,7 @@ export default function CourseForm({ course }: { course?: Course }) {
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         <div className="space-y-1.5">
           <label htmlFor="course-category" className={labelCls}>
             Category
@@ -124,6 +129,35 @@ export default function CourseForm({ course }: { course?: Course }) {
             placeholder="e.g. Safety, HR, Technical"
             className={inputCls}
           />
+        </div>
+        <div className="space-y-1.5">
+          <label htmlFor="course-level" className={labelCls}>
+            Level
+          </label>
+          <select
+            id="course-level"
+            value={form.level}
+            onChange={(e) =>
+              setForm((p) => ({
+                ...p,
+                level: e.target.value as
+                  | "beginner"
+                  | "intermediate"
+                  | "advanced",
+              }))
+            }
+            className={inputCls}
+          >
+            <option value="beginner" className="bg-slate-900">
+              Beginner
+            </option>
+            <option value="intermediate" className="bg-slate-900">
+              Intermediate
+            </option>
+            <option value="advanced" className="bg-slate-900">
+              Advanced
+            </option>
+          </select>
         </div>
         <div className="space-y-1.5">
           <label htmlFor="course-status" className={labelCls}>

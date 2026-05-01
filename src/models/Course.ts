@@ -27,6 +27,7 @@ export interface ICourse extends Document {
   description: string;
   thumbnail?: string;
   category: string;
+  level?: "beginner" | "intermediate" | "advanced";
   createdBy: mongoose.Types.ObjectId;
   modules: IModule[];
   status: "draft" | "published";
@@ -61,6 +62,11 @@ const CourseSchema = new Schema<ICourse>(
     description: { type: String, required: true },
     thumbnail: String,
     category: { type: String, required: true },
+    level: {
+      type: String,
+      enum: ["beginner", "intermediate", "advanced"],
+      default: "beginner",
+    },
     createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
     modules: [ModuleSchema],
     status: { type: String, enum: ["draft", "published"], default: "draft" },

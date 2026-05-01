@@ -12,9 +12,22 @@ type Course = {
   title: string;
   description: string;
   category: string;
+  level?: "beginner" | "intermediate" | "advanced";
   status: "draft" | "published";
   createdBy?: { name: string };
   modules?: any[];
+};
+
+const LEVEL_COLORS = {
+  beginner: "bg-emerald-500/20 text-emerald-300 border-emerald-400/30",
+  intermediate: "bg-amber-500/20 text-amber-300 border-amber-400/30",
+  advanced: "bg-red-500/20 text-red-300 border-red-400/30",
+};
+
+const LEVEL_GRADIENTS = {
+  beginner: "from-emerald-900 via-teal-900 to-slate-900",
+  intermediate: "from-amber-900 via-orange-900 to-slate-900",
+  advanced: "from-red-900 via-rose-900 to-slate-900",
 };
 
 /* ── Course card (student grid) ─────────────────────────────── */
@@ -25,13 +38,19 @@ function CourseCard({
   course: Course;
   progress?: number;
 }) {
+  const level = course.level || "beginner";
+  const gradient = LEVEL_GRADIENTS[level];
+  const levelColor = LEVEL_COLORS[level];
+
   return (
     <Link
       href={`/courses/${course._id}`}
       className="group relative flex-shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl transition-all hover:border-indigo-400/40 hover:-translate-y-1 hover:shadow-2xl hover:shadow-indigo-500/20"
     >
       {/* Thumbnail */}
-      <div className="relative aspect-video overflow-hidden bg-gradient-to-br from-indigo-900 via-blue-900 to-violet-900">
+      <div
+        className={`relative aspect-video overflow-hidden bg-gradient-to-br ${gradient}`}
+      >
         <div className="flex h-full w-full items-center justify-center">
           <BookOpen className="h-10 w-10 text-white/20" />
         </div>
@@ -42,11 +61,19 @@ function CourseCard({
             <Play className="h-5 w-5 fill-slate-900 text-slate-900 ml-0.5" />
           </div>
         </div>
-        {course.category && (
-          <span className="absolute top-3 left-3 rounded-full bg-slate-950/70 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-indigo-300 backdrop-blur">
-            {course.category}
+        {/* Category + Level badges */}
+        <div className="absolute top-3 left-3 flex items-center gap-1.5">
+          {course.category && (
+            <span className="rounded-full bg-slate-950/70 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-indigo-300 backdrop-blur">
+              {course.category}
+            </span>
+          )}
+          <span
+            className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold capitalize backdrop-blur ${levelColor}`}
+          >
+            {level}
           </span>
-        )}
+        </div>
       </div>
       {/* Body */}
       <div className="p-4">
@@ -329,6 +356,9 @@ export default function CoursesPage() {
                   </th>
                 )}
                 <th className="text-left px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                  Level
+                </th>
+                <th className="text-left px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
                   Status
                 </th>
                 <th className="px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-slate-400 text-right">
@@ -355,6 +385,15 @@ export default function CoursesPage() {
                       {(c.createdBy as any)?.name || "—"}
                     </td>
                   )}
+                  <td className="px-5 py-3.5">
+                    <span
+                      className={`px-2 py-0.5 text-[10px] font-semibold rounded-full border capitalize ${
+                        LEVEL_COLORS[c.level || "beginner"]
+                      }`}
+                    >
+                      {c.level || "beginner"}
+                    </span>
+                  </td>
                   <td className="px-5 py-3.5">
                     <span
                       className={`px-2 py-0.5 text-[10px] font-semibold rounded-full border ${
