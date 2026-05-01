@@ -7,8 +7,12 @@ import Providers from "@/components/layout/Providers";
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-  title: "LMS — Internal Training",
-  description: "Operational Training System",
+  title: "MetaLogics LMS — Internal Training",
+  description: "MetaLogics Internal Learning Management System",
+  icons: {
+    icon: [{ url: "/METALOGICS-SVG-02.png", type: "image/png" }],
+    apple: "/METALOGICS-SVG-02.png",
+  },
 };
 
 export default async function RootLayout({
@@ -21,6 +25,8 @@ export default async function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <head>
+        <link rel="icon" href="/METALOGICS-SVG-02.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/METALOGICS-SVG-02.png" />
         <link
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
