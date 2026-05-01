@@ -2,6 +2,8 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
+  // mongoose needs to run server-side only
+  serverExternalPackages: ["mongoose"],
   images: {
     remotePatterns: [
       {
@@ -9,11 +11,6 @@ const nextConfig: NextConfig = {
         hostname: "res.cloudinary.com",
       },
     ],
-  },
-  // Tell Next.js not to fail the build if env vars are missing
-  // (they will be present at runtime on Railway)
-  experimental: {
-    serverComponentsExternalPackages: ["mongoose"],
   },
 };
 
