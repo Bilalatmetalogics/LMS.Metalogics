@@ -43,19 +43,11 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-primary-deep">
-      {/* Mesh gradient backdrop */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-mesh" />
-      {/* Animated grid */}
-      <div className="pointer-events-none absolute inset-0 bg-grid opacity-40" />
-
-      {/* Floating ambient blobs */}
-      <div className="pointer-events-none absolute -top-40 -left-40 h-[28rem] w-[28rem] rounded-full bg-primary-glow/30 blur-3xl animate-blob" />
-      <div className="pointer-events-none absolute top-1/3 -right-40 h-[32rem] w-[32rem] rounded-full bg-primary/40 blur-3xl animate-blob animation-delay-2000" />
-      <div className="pointer-events-none absolute -bottom-40 left-1/3 h-[26rem] w-[26rem] rounded-full bg-primary-glow/25 blur-3xl animate-blob animation-delay-4000" />
-
+    <main className="relative min-h-screen overflow-hidden bg-[var(--sidebar)] text-white">
+      {/* Mesh gradient — matches Lovable */}
+      <div className="bg-gradient-mesh animate-mesh pointer-events-none absolute inset-0 opacity-90" />
       {/* Vignette */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,oklch(0.1_0.1_265/0.6)_100%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,transparent,oklch(0.1_0.04_265/0.7))]" />
 
       <div className="relative flex min-h-screen flex-col items-center justify-center px-4 py-12">
         {/* Brand wordmark */}
